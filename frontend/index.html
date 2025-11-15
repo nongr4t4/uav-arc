@@ -1,0 +1,159 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <title>UAV Mission Configurator</title>
+    <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+  <div class="shell">
+    <!-- HEADER -->
+    <header>
+      <div class="header-left">
+        <div class="logo-circle">
+          <img src="drone.png" alt="UAV Mission Configurator" style="width: 100%; height: 100%; object-fit: cover; border-radius: 50%;">
+        </div>
+        <div class="brand-block">
+          <div class="brand-title">UAV Mission Configurator</div>
+          <div class="brand-sub">by EXPLOITCREW · AI-assisted UAV engineering tool</div>
+        </div>
+      </div>
+
+      <div class="header-right">
+        <nav>
+          <a href="#">Configurate</a>
+          <a href="#">Docs</a>
+          <a href="#">Contact</a>
+          <a href="#">About</a>
+        </nav>
+        <div class="pill-beta">Prototype</div>
+      </div>
+    </header>
+
+    <!-- MAIN CONTENT -->
+    <main>
+      <!-- LEFT: HERO + SHORT EXPLANATION -->
+      <section class="panel">
+        <div class="panel-inner">
+          <h1 class="hero-title">Automatic UAV powertrain & mission designer</h1>
+          <p class="hero-sub">
+            Задай параметри місії: час польоту, радіус дії, корисне навантаження, шум та бюджет.
+            Сервіс сам підбере клас місії, тип силової установки та конфігурацію гвинтомоторної групи.
+          </p>
+
+          <div class="hero-badges">
+            <div class="badge">
+              <span class="badge-dot"></span>
+              Tactical · Operational · Strategic
+            </div>
+            <div class="badge">
+              ⚙️ Powertrain auto-selection
+            </div>
+            <div class="badge">
+              🧠 ChatGPT explanation engine
+            </div>
+          </div>
+
+          <div class="hero-cta">
+            <button class="btn btn-primary">
+              Start configuration →
+            </button>
+            <button class="btn btn-ghost">
+              View example mission
+            </button>
+          </div>
+
+          <div class="hero-meta">
+            <span>Education: військові кафедри, курси БПЛА</span>
+            <span>Engineering: попередній підбір конфігурацій</span>
+          </div>
+
+          <!-- small cards row -->
+          <div class="cards">
+            <div class="card">
+              <div class="card-label">Module</div>
+              <div class="card-title">Mission classifier</div>
+              <p>Визначає тактичну, оперативну або стратегічну місію за заданими параметрами.</p>
+            </div>
+            <div class="card">
+              <div class="card-label">Module</div>
+              <div class="card-title">Powertrain selector</div>
+              <p>Автоматично обирає: електрика, поршневий ДВЗ або турбіна по вимогах місії.</p>
+              <span class="pill-tag">
+                ● Electric · ICE · Turbine
+              </span>
+            </div>
+            <div class="card">
+              <div class="card-label">Module</div>
+              <div class="card-title">Performance calculator</div>
+              <p>Розраховує тягу, потужність, ємність АКБ, масу БПЛА, час польоту та реальний радіус.</p>
+              <span class="pill-tag pill-tag-danger">
+                Live feasibility score
+              </span>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <!-- RIGHT: MOCK CONFIG PANEL -->
+      <aside class="panel">
+        <div class="panel-inner">
+          <div class="right-title-row">
+            <div>Mission quick sketch</div>
+            <span>Prototype view · read-only</span>
+          </div>
+
+          <div class="grid-cols-2">
+            <div class="field-group">
+              <div class="field-label">Flight time (min)</div>
+              <div class="field-main">
+                <div class="field-value">45</div>
+                <div class="field-unit">required ≥ 40</div>
+              </div>
+              <div class="field-helper">Estimated at sea level, Loiter profile.</div>
+            </div>
+
+            <div class="field-group">
+              <div class="field-label">Radius of action (km)</div>
+              <div class="field-main">
+                <div class="field-value">18.2</div>
+                <div class="field-unit">link margin 12 dB</div>
+              </div>
+              <div class="field-helper">Two-way link, 20% energy reserve.</div>
+            </div>
+
+            <div class="field-group">
+              <div class="field-label">Payload</div>
+              <div class="field-main">
+                <div class="field-value">3.5</div>
+                <div class="field-unit">kg</div>
+              </div>
+              <div class="field-helper">EO/IR gimbal + datalink node.</div>
+            </div>
+
+            <div class="field-group">
+              <div class="field-label">Acoustic signature</div>
+              <div class="field-main">
+                <div class="field-value">Low</div>
+                <div class="field-unit">(≤ 55 dBA @ 200 m)</div>
+              </div>
+              <div class="field-helper">Electric powertrain recommended.</div>
+            </div>
+          </div>
+
+          <div class="ai-explain">
+            <p>
+              <strong>AI insight:</strong> конфігурація віднесена до
+              тактичного класу. Електрична силова установка із 4-моторною
+              схемою забезпечує запас по часу польоту ~12% від вимог.
+            </p>
+            <button class="btn-ai">
+              Ask AI to explain →
+            </button>
+          </div>
+        </div>
+      </aside>
+    </main>
+  </div>
+</body>
+</html>
