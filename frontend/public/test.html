@@ -1,0 +1,63 @@
+<!DOCTYPE html>
+<html lang="uk">
+<head>
+	<meta charset="utf-8" />
+	<meta name="viewport" content="width=device-width,initial-scale=1" />
+	<title>Test page — Frontend</title>
+	<style>
+		body{font-family:Arial,Helvetica,sans-serif;max-width:800px;margin:40px auto;padding:0 16px;color:#222}
+		h1{color:#0b5}
+		.box{border:1px solid #ddd;padding:16px;border-radius:8px;background:#fbfbfb}
+		button{padding:10px 14px;font-size:16px}
+		pre{background:#111;color:#0f0;padding:12px;border-radius:6px;overflow:auto}
+	</style>
+</head>
+<body>
+	<h1>Тестова сторінка (Frontend)</h1>
+	<p>Ця сторінка дозволяє перевірити фронтенд та бекенд (health-check).</p>
+
+	<div class="box">
+		<p><strong>Frontend status:</strong> <span id="frontend-status">OK</span></p>
+		<p><strong>Time:</strong> <span id="time"></span></p>
+		<hr />
+		<p>
+			<button id="pingBtn">Перевірити бекенд (/ping)</button>
+			<button id="echoBtn">Відправити /echo</button>
+		</p>
+		<div id="result" style="margin-top:12px">
+			<pre id="output">Натисніть кнопку, щоб виконати запит...</pre>
+		</div>
+	</div>
+
+	<script>
+		const out = document.getElementById('output');
+		const timeEl = document.getElementById('time');
+		function updateTime(){ timeEl.textContent = new Date().toLocaleString(); }
+		setInterval(updateTime,1000); updateTime();
+
+		async function ping(){
+			out.textContent = 'Виконується /ping...';
+			try{
+				const res = await fetch('/ping', {cache:'no-store'});
+				const data = await res.json();
+				out.textContent = JSON.stringify({ok:res.ok, status:res.status, body:data}, null, 2);
+			}catch(err){ out.textContent = 'Помилка: '+err.toString(); }
+		}
+
+		async function echo(){
+			out.textContent = 'Виконується /echo...';
+			try{
+				const payload = {message:'hello from frontend', ts:new Date().toISOString()};
+				const res = await fetch('/echo',{
+					method:'POST', headers:{'Content-Type':'application/json'}, body:JSON.stringify(payload)
+				});
+				const data = await res.json();
+				out.textContent = JSON.stringify({ok:res.ok, status:res.status, body:data}, null, 2);
+			}catch(err){ out.textContent = 'Помилка: '+err.toString(); }
+		}
+
+		document.getElementById('pingBtn').addEventListener('click', ping);
+		document.getElementById('echoBtn').addEventListener('click', echo);
+	</script>
+</body>
+</html>
