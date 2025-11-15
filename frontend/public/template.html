@@ -1,0 +1,391 @@
+<!DOCTYPE html>
+<html lang="uk">
+<head>
+  <meta charset="UTF-8" />
+  <title>UAV Mission Configurator · Powertrain Scenarios</title>
+
+  <link rel="stylesheet" href="styles.css">
+
+  <style>
+    .doc-root {
+      display: block;
+      margin-top: 18px;
+    }
+
+    .doc-body {
+      font-size: 13px;
+      color: var(--text-main, #f4f4f4);
+      line-height: 1.6;
+    }
+
+    .doc-body h1 {
+      font-size: 22px;
+      margin-bottom: 12px;
+    }
+
+    .doc-body h2 {
+      font-size: 17px;
+      margin-bottom: 8px;
+    }
+
+    .doc-body h3 {
+      font-size: 14px;
+      margin-top: 12px;
+      margin-bottom: 4px;
+      text-transform: uppercase;
+      letter-spacing: 0.12em;
+      color: var(--text-muted, #b0adb4);
+    }
+
+    .doc-body p {
+      margin: 4px 0 8px;
+      text-align: justify;
+      color: var(--text-main, #f4f4f4);
+    }
+
+    .doc-body ul {
+      margin: 4px 0 10px 18px;
+      padding: 0;
+    }
+
+    .doc-body ul li {
+      margin: 3px 0;
+    }
+
+    .scenario-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: baseline;
+      gap: 8px;
+      margin-bottom: 6px;
+    }
+
+    .scenario-tag {
+      font-size: 10px;
+      padding: 3px 8px;
+      border-radius: 999px;
+      border: 1px solid rgba(255, 255, 255, 0.18);
+      color: var(--text-muted, #b0adb4);
+      white-space: nowrap;
+    }
+
+    .scenario-grid {
+      display: grid;
+      grid-template-columns: minmax(0, 1.2fr) minmax(0, 1fr);
+      gap: 14px;
+      margin-top: 10px;
+    }
+
+    .scenario-col {
+      border-radius: 12px;
+      border: 1px solid var(--border-subtle, #2a272c);
+      background: rgba(0, 0, 0, 0.35);
+      padding: 10px 12px;
+      font-size: 12px;
+    }
+
+    .scenario-col h4 {
+      font-size: 12px;
+      margin-bottom: 4px;
+    }
+
+    .scenario-col p {
+      font-size: 12px;
+      margin-bottom: 6px;
+    }
+
+    .scenario-col ul {
+      font-size: 12px;
+      margin-left: 16px;
+    }
+
+    .scenario-table {
+      width: 100%;
+      border-collapse: collapse;
+      margin-top: 6px;
+      font-size: 12px;
+    }
+
+    .scenario-table th,
+    .scenario-table td {
+      border: 1px solid var(--border-subtle, #2a272c);
+      padding: 4px 6px;
+      text-align: left;
+    }
+
+    .scenario-table thead th {
+      background: rgba(255, 255, 255, 0.04);
+    }
+
+    .scenario-footer {
+      margin-top: 8px;
+      font-size: 11px;
+      color: var(--text-muted, #b0adb4);
+    }
+
+    @media (max-width: 800px) {
+      .scenario-grid {
+        grid-template-columns: minmax(0, 1fr);
+      }
+    }
+  </style>
+</head>
+<body>
+  <div class="shell">
+    <!-- HEADER -->
+    <header>
+      <div class="header-left">
+        <div class="logo-circle">
+          <img src="drone.png" alt="UAV Mission Configurator" style="width: 100%; height: 100%; object-fit: cover; border-radius: 50%;">
+        </div>
+        <div class="brand-block">
+          <div class="brand-title">UAV Mission Configurator</div>
+          <div class="brand-sub">by EXPLOITCREW · AI-assisted UAV engineering tool</div>
+        </div>
+      </div>
+
+      <div class="header-right">
+        <nav>
+          <a href="index.html">Configurate</a>
+          <a href="Docs.html" style="color:#ffffff;">Docs</a>
+          <a href="contact.html">Contact</a>
+          <a href="about.html">About</a>
+        </nav>
+        <div class="pill-beta">Scenarios</div>
+      </div>
+    </header>
+
+    <!-- MAIN -->
+    <main class="doc-root">
+      <!-- PANEL: заголовок сторінки -->
+      <section class="panel">
+        <div class="panel-inner doc-body">
+          <h1>Гвинтомоторна група БПЛА: три базові сценарії</h1>
+          <p>
+            Нижче наведено три типові конфігурації силових установок для різних класів місій:
+            тактичний баражувальний розвідник, оперативний ударний БПЛА MALE-класу та важкий
+            багатоцільовий дрон з акцентом на дальність і дешевизну.
+          </p>
+        </div>
+      </section>
+
+      <!-- SCENARIO 1 -->
+      <section class="panel" id="scenario1" style="margin-top:14px;">
+        <div class="panel-inner doc-body">
+          <div class="scenario-header">
+            <h2>1. Тактичний баражувальний БПЛА</h2>
+            <div class="scenario-tag">радіус 20–30 км · ~2 год польоту</div>
+          </div>
+
+          <div class="scenario-grid">
+            <!-- LEFT: Місія + вибір ГМГ -->
+            <div class="scenario-col">
+              <h3>Місія</h3>
+              <p>
+                Ближня розвідка та патрулювання з малим радіусом дії. Вимоги:
+              </p>
+              <ul>
+                <li>час польоту ≥ 2 год;</li>
+                <li>корисне навантаження ~2 кг (EO-камера);</li>
+                <li>мінімальний шум і тепловий слід;</li>
+                <li>швидкий запуск без прогріву.</li>
+              </ul>
+
+              <h3>Вибір силової установки</h3>
+              <p>
+                Електрична <abbr title="гвинтомоторна група">ГМГ</abbr> з безщітковим мотором:
+                тихо, малопомітно та просто в експлуатації. Обмеження – ємність батарей,
+                але при правильному підборі це покриває місію.
+              </p>
+
+              <h3>Основні параметри</h3>
+              <table class="scenario-table">
+                <thead>
+                  <tr><th>Параметр</th><th>Значення</th></tr>
+                </thead>
+                <tbody>
+                  <tr><td>Двигун</td><td>T-Motor MN4014, 0.75 кВт, 0.15 кг</td></tr>
+                  <tr><td>Пропелер</td><td>17×5.8″, 2-лопатевий, карбон</td></tr>
+                  <tr><td>Батарея</td><td>Li-ion 6S, ~20 А·год (~500 Вт·год)</td></tr>
+                  <tr><td>Необхідна тяга</td><td>~7 Н (крейсер)</td></tr>
+                  <tr><td>Макс. тяга</td><td>~25 Н (статична)</td></tr>
+                  <tr><td>Час польоту</td><td>≈ 2 год</td></tr>
+                  <tr><td>Вартість ГМГ</td><td>~$1 000</td></tr>
+                </tbody>
+              </table>
+            </div>
+
+            <!-- RIGHT: Пояснення + альтернативи -->
+            <div class="scenario-col">
+              <h3>Пояснення</h3>
+              <p>
+                За розрахунками аеродинамічного опору та потужності, електромотор
+                з батареєю ~500 Вт·год забезпечує необхідну тягу й енергію на 2 год
+                патрулювання. Великий повільнообертовий гвинт зменшує шум і підвищує ККД.
+              </p>
+
+              <h3>Альтернативи (відхилені)</h3>
+              <ul>
+                <li>ДВЗ – краща енергомісткість, але високий шум і тепловий слід.</li>
+                <li>Квадрокоптер – простота, але низька енергоефективність і малий час польоту.</li>
+                <li>Водневі паливні елементи – технологічно цікаво, але занадто дорого.</li>
+              </ul>
+
+              <div class="scenario-footer">
+                <strong>Висновок:</strong> електрична ГМГ – оптимальний компроміс
+                між тихою роботою, простою експлуатацією та вартістю для тактичного
+                баражувального дрона.
+              </div>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <!-- SCENARIO 2 -->
+      <section class="panel" id="scenario2" style="margin-top:14px;">
+        <div class="panel-inner doc-body">
+          <div class="scenario-header">
+            <h2>2. Оперативний ударний БПЛА (MALE)</h2>
+            <div class="scenario-tag">радіус 100–200 км · 12+ год польоту</div>
+          </div>
+
+          <div class="scenario-grid">
+            <!-- LEFT -->
+            <div class="scenario-col">
+              <h3>Місія</h3>
+              <p>
+                Ударний і розвідувальний БПЛА середньої дальності:
+              </p>
+              <ul>
+                <li>час польоту ≥ 12 год;</li>
+                <li>корисне навантаження до 50 кг;</li>
+                <li>робота на середніх висотах, різні погодні умови;</li>
+                <li>бюджет проєкту до ~$100 000.</li>
+              </ul>
+
+              <h3>Вибір силової установки</h3>
+              <p>
+                Електрична схема відпадає через масу батарей. Оптимальний варіант –
+                поршневий авіадвигун малої потужності з гвинтом змінного кроку.
+                Орієнтир – конфігурація типу Bayraktar TB2.
+              </p>
+
+              <h3>Основні параметри</h3>
+              <table class="scenario-table">
+                <thead>
+                  <tr><th>Параметр</th><th>Значення</th></tr>
+                </thead>
+                <tbody>
+                  <tr><td>Двигун</td><td>Rotax 912 iS, 100 к.с., ~64 кг</td></tr>
+                  <tr><td>Пропелер</td><td>2-лопатевий, діам. ~2 м, змінний крок</td></tr>
+                  <tr><td>Паливо</td><td>60 л авіабензину (~45 кг)</td></tr>
+                  <tr><td>Необхідна тяга</td><td>~200 Н (крейсер)</td></tr>
+                  <tr><td>Макс. тяга</td><td>&gt;500 Н (зліт)</td></tr>
+                  <tr><td>Час польоту</td><td>≈ 12–15 год</td></tr>
+                  <tr><td>Вартість ГМГ</td><td>~$50 000</td></tr>
+                </tbody>
+              </table>
+            </div>
+
+            <!-- RIGHT -->
+            <div class="scenario-col">
+              <h3>Пояснення</h3>
+              <p>
+                Розрахунок часу польоту через запас палива, питому витрату й
+                потужність показує, що 60 л палива при оптимальному крейсерському
+                режимі дають ≈12 год місії. 4-тактний Rotax має ресурс ~2000 год
+                та прийнятну витрату (~0.4 кг/кВт·год).
+              </p>
+
+              <h3>Альтернативи (відхилені)</h3>
+              <ul>
+                <li>Турбогвинтовий двигун – надлишкова потужність і дуже висока ціна.</li>
+                <li>Дизель JP-8 – цікаво логістично, але важче й гірша висотність.</li>
+                <li>Гібридна схема – додаткова вага й складність без критичної переваги.</li>
+              </ul>
+
+              <div class="scenario-footer">
+                <strong>Висновок:</strong> поршневий Rotax 912 iS із гвинтом змінного кроку
+                дає потрібну тривалість, тягу і надійність у межах бюджету MALE-платформи.
+              </div>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <!-- SCENARIO 3 -->
+      <section class="panel" id="scenario3" style="margin-top:14px; margin-bottom:18px;">
+        <div class="panel-inner doc-body">
+          <div class="scenario-header">
+            <h2>3. Важкий багатоцільовий/ударний БПЛА</h2>
+            <div class="scenario-tag">дальність до 1000 км · фокус на дешевизні</div>
+          </div>
+
+          <div class="scenario-grid">
+            <!-- LEFT -->
+            <div class="scenario-col">
+              <h3>Місія</h3>
+              <p>
+                Важкий дрон для дальніх ударів або одноразових місій:
+              </p>
+              <ul>
+                <li>корисне навантаження ~40 кг;</li>
+                <li>дальність до 1000 км, 3–5 год польоту;</li>
+                <li>пріоритет – низька вартість і простота виробництва;</li>
+                <li>допускається високий рівень шуму.</li>
+              </ul>
+
+              <h3>Вибір силової установки</h3>
+              <p>
+                Реалістичний варіант – простий бензиновий поршневий двигун з
+                фіксованим штовхаючим пропелером. Орієнтир – схема, подібна
+                до Shahed-136 (двигун MD550).
+              </p>
+
+              <h3>Основні параметри</h3>
+              <table class="scenario-table">
+                <thead>
+                  <tr><th>Параметр</th><th>Значення</th></tr>
+                </thead>
+                <tbody>
+                  <tr><td>Двигун</td><td>MD550, 50 к.с., ~16 кг</td></tr>
+                  <tr><td>Пропелер</td><td>2-лопатевий штовхаючий, ~1.7 м, фікс. крок</td></tr>
+                  <tr><td>Паливо</td><td>~70 л бензину (~50 кг)</td></tr>
+                  <tr><td>Необхідна тяга</td><td>~260 Н (крейсер)</td></tr>
+                  <tr><td>Макс. тяга</td><td>~300 Н (крейсер при 100% потужності)</td></tr>
+                  <tr><td>Час польоту</td><td>≈ 5 год</td></tr>
+                  <tr><td>Вартість ГМГ</td><td>≈$3.5–4 тис.</td></tr>
+                </tbody>
+              </table>
+            </div>
+
+            <!-- RIGHT -->
+            <div class="scenario-col">
+              <h3>Пояснення</h3>
+              <p>
+                При запасі палива ~50 кг та середній потужності ~15 кВт отримаємо
+                час польоту понад 5 год. Простий двотактний двигун забезпечує
+                достатню тягу для маси ~200 кг при старті з катапульти або
+                прискорювача.
+              </p>
+
+              <h3>Альтернативи (відхилені)</h3>
+              <ul>
+                <li>Турбореактивний – занадто дорогий та “прожорливий”.</li>
+                <li>Роторний (Wankel) – компактний, але дорогий і ресурсний.</li>
+                <li>Малопотужні мотори – не тягнуть 40 кг бойового навантаження.</li>
+              </ul>
+
+              <div class="scenario-footer">
+                <strong>Висновок:</strong> проста бензинова ГМГ на базі MD550 дає
+                максимальну дальність за мінімальну ціну, що критично для масового
+                застосування важких ударних дронів одноразового типу.
+              </div>
+            </div>
+          </div>
+        </div>
+      </section>
+    </main>
+  </div>
+</body>
+</html>
