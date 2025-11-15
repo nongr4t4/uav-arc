@@ -1,0 +1,128 @@
+<!DOCTYPE html>
+<html lang="uk">
+<head>
+  <meta charset="UTF-8" />
+  <title>About us · UAV Mission Configurator</title>
+  <link rel="stylesheet" href="styles.css"><!-- якщо ти вже виніс стилі -->
+</head>
+<body>
+  <div class="shell">
+    <!-- HEADER (той самий, що на index.html) -->
+    <header>
+      <div class="header-left">
+        <div class="logo-circle">
+          <img src="drone.png" alt="UAV Mission Configurator" style="width: 100%; height: 100%; object-fit: cover; border-radius: 50%;">
+        </div>
+        <div class="brand-block">
+          <div class="brand-title">UAV Mission Configurator</div>
+          <div class="brand-sub">by EXPLOITCREW · AI-assisted UAV engineering tool</div>
+        </div>
+      </div>
+
+      <div class="header-right">
+        <nav>
+          <a href="index.html">Configurate</a>
+          <a href="#">Docs</a>
+          <a href="contact.html">Contact</a>
+          <a href="about.html" style="color:#fff;">About</a>
+        </nav>
+        <div class="pill-beta">Prototype</div>
+      </div>
+    </header>
+
+    <!-- MAIN: ABOUT -->
+    <main style="margin-top:18px; display:block;">
+      <section class="panel">
+        <div class="panel-inner">
+          <h1 class="hero-title">About EXPLOITCREW & UAV Mission Configurator</h1>
+          <p class="hero-sub">
+            UAV Mission Configurator — це прототип онлайн-сервісу, який допомагає інженерам і військовослужбовцяв
+            підбирати конфігурацію БПЛА не вручну, а через напівавтоматичний інженерний калькулятор
+            із підтримкою штучного інтелекту.
+          </p>
+
+          <!-- Хто ми -->
+          <div class="cards" style="margin-top:10px;">
+            <div class="card">
+              <div class="card-label">Who we are</div>
+              <div class="card-title">EXPLOITCREW</div>
+              <p>
+                Команда ентузіастів, які поєднують досвід військовиз у БПЛА, програмуванні та кібербезпеці.
+                Ми робимо інструменти, які знімають рутину з інженера і дозволяють концентруватись на рішенні задачі.
+              </p>
+            </div>
+
+            <div class="card">
+              <div class="card-label">Mission</div>
+              <div class="card-title">Зробити підбір конфігурації прозорим</div>
+              <p>
+                Замість десятків таблиць, калькуляторів і формул — один інтерфейс, де користувач задає
+                параметри місії, а система показує клас місії, тип силової установки та орієнтовні розрахунки.
+              </p>
+              <span class="pill-tag">
+                • Education · Engineering
+              </span>
+            </div>
+
+            <div class="card">
+              <div class="card-label">For whom</div>
+              <div class="card-title">Курсанти, інженери, R&amp;D-команди</div>
+              <p>
+                Викладачі можуть використовувати сервіс як навчальний стенд на заняттях,
+                а інженери — як стартову точку для попереднього дизайну БПЛА перед детальним моделюванням.
+              </p>
+            </div>
+          </div>
+
+          <!-- Tech / AI / Roadmap -->
+          <div class="cards" style="margin-top:16px;">
+            <div class="card">
+              <div class="card-label">Tech</div>
+              <div class="card-title">Stack &amp; architecture</div>
+              <p>
+                Фронтенд: сучасний веб-інтерфейс (HTML/CSS/JS). Далі планується React/TypeScript.
+                Бекенд: модуль розрахунків тяги, енергоспоживання та маси БПЛА з можливістю підключення бази типових компонентів.
+              </p>
+            </div>
+
+            <div class="card">
+              <div class="card-label">AI layer</div>
+              <div class="card-title">ChatGPT explanation engine</div>
+              <p>
+                Інтеграція з ChatGPT API дозволить не просто видати цифри, а й пояснити:
+                чому обрано саме цю конфігурацію, як зміниться час польоту або шум,
+                якщо змінити двигун, пропелер чи масу корисного навантаження.
+              </p>
+              <span class="pill-tag">
+                🧠 Human-readable engineering
+              </span>
+            </div>
+
+            <div class="card">
+              <div class="card-label">Roadmap</div>
+              <div class="card-title">Що далі?</div>
+              <p>
+                • бібліотека реальних моторів і пропелерів;<br>
+                • експорт звіту місії у PDF;<br>
+                • режим “what-if” для порівняння кількох конфігурацій;<br>
+                • API для інтеграції з іншими навчальними платформами.
+              </p>
+              <span class="pill-tag pill-tag-danger">
+                In active development
+              </span>
+            </div>
+          </div>
+
+          <!-- маленький блок з командою -->
+          <div style="margin-top:18px; font-size:11px; color:var(--text-muted);">
+            Якщо ви хочете співпрацювати, протестувати сервіс у навчальному процесі
+            або інтегрувати його у свій курс/лабораторію — напишіть нам через розділ
+            <strong>Contact</strong>
+            
+          </div>
+        </div>
+      </section>    
+    </main>
+  </div>
+</body>
+</html>
