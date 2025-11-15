@@ -1,0 +1,124 @@
+<!DOCTYPE html>
+<html lang="uk">
+<head>
+    <meta charset="UTF-8">
+    <title>UAV Конфігуратор</title>
+
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            margin: 30px;
+            max-width: 800px;
+        }
+        input {
+            width: 200px;
+            margin-bottom: 10px;
+        }
+        button {
+            padding: 10px 16px;
+            background: #2d72d9;
+            color: white;
+            border: none;
+            border-radius: 6px;
+            cursor: pointer;
+        }
+        #result {
+            margin-top: 25px;
+            padding: 15px;
+            border: 1px solid #ccc;
+            border-radius: 8px;
+            background: #f8f8f8;
+        }
+        .label {
+            font-weight: bold;
+            margin-top: 10px;
+        }
+    </style>
+</head>
+
+<body>
+
+    <h1>UAV Конфігуратор</h1>
+
+    <p>Введіть параметри місії:</p>
+
+    <label>Час польоту (години):</label><br>
+    <input id="timeHours" type="number" value="2"><br>
+
+    <label>Радіус дії (км):</label><br>
+    <input id="radiusKm" type="number" value="25"><br>
+
+    <label>Корисне навантаження (кг):</label><br>
+    <input id="payloadKg" type="number" value="2"><br>
+
+    <label>Низький шум:</label><br>
+    <select id="lowNoise">
+        <option value="true">Так</option>
+        <option value="false">Ні</option>
+    </select><br>
+
+    <label>Бюджет ($):</label><br>
+    <input id="budget" type="number" value="5000"><br><br>
+
+    <button onclick="sendRequest()">Розрахувати</button>
+
+    <div id="result">
+        <h2>Результат з'явиться тут</h2>
+    </div>
+
+<script>
+async function sendRequest() {
+    const data = {
+        timeHours: parseFloat(document.getElementById("timeHours").value),
+        radiusKm: parseFloat(document.getElementById("radiusKm").value),
+        payloadKg: parseFloat(document.getElementById("payloadKg").value),
+        lowNoise: document.getElementById("lowNoise").value === "true",
+        budget: parseFloat(document.getElementById("budget").value)
+    };
+
+    const response = await fetch("https://uav-arc-backend.onrender.com/api/configure", {
+        method: "POST",
+        headers: {"Content-Type": "application/json"},
+        body: JSON.stringify(data)
+    });
+
+    const json = await response.json();
+
+    document.getElementById("result").innerHTML = `
+        <h2>📡 Результати місії</h2>
+
+        <div class="label">Тип місії:</div>
+        <div>${json.mission.missionType}</div>
+
+        <div class="label">Рекомендована ГМГ:</div>
+        <div>${json.mission.recommendedPropulsion}</div>
+
+        <div class="label">Стартова маса:</div>
+        <div>${json.calculations.mass.takeoffMass_kg.toFixed(2)} кг</div>
+
+        <div class="label">Потрібна потужність:</div>
+        <div>${json.calculations.power.cruisePower_W.toFixed(1)} Вт</div>
+
+        <div class="label">Енергія / паливо:</div>
+        <div>
+            ${json.calculations.energy.requiredEnergy_Wh
+                ? json.calculations.energy.requiredEnergy_Wh.toFixed(0) + " Wh"
+                : "N/A (ДВЗ)"}
+        </div>
+
+        <div class="label">Маса батареї / палива:</div>
+        <div>${json.calculations.energy.batteryOrFuelMass_kg.toFixed(2)} кг</div>
+
+        <div class="label">Досяжний радіус:</div>
+        <div>${json.calculations.performance.achievableRadius_km.toFixed(1)} км</div>
+
+        <div class="label">Висновок ChatGPT:</div>
+        <div style="background:white; padding:10px; border-radius:6px;">
+            ${json.aiComment}
+        </div>
+    `;
+}
+</script>
+
+</body>
+</html>
