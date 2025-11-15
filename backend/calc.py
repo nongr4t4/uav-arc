@@ -1,49 +1,28 @@
 from flask import Flask, request, jsonify
 from flask_cors import CORS
 import os
-import requests  # Використовуємо requests для HTTP-запитів до Gemini API
+import math
+import requests
 
 app = Flask(__name__)
 CORS(app)
 
-# -------------------------
-# КОНФІГУРАЦІЯ GEMINI API
-# -------------------------
 GEMINI_API_URL = "https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash-preview-09-2025:generateContent"
-API_KEY = os.environ.get("GEMINI_API_KEY", "")  # 🔥 НЕ ЧІПАЮ
+API_KEY = os.environ.get("GEMINI_API_KEY", "")
 
-# -------------------------
-# ЛОГІКА (КОРИГУВАННЯ)
-# -------------------------
 
-def classify_mission(time_h, radius_km, payload_kg):
-    """
-    Класифікація місії:
-    - спочатку по часу/радіусу (тактична/оперативна/стратегічна),
-    - потім корекція по корисному навантаженню (щоб не було 100 кг на "тактичному").
-    """
-    # Базова класифікація за глибиною
+# -------------------------------------------------
+# 1) КЛАСИФІКАЦІЯ МІСІЇ
+# -------------------------------------------------
+def classify_mission(time_h, radius_km):
     if time_h <= 4 and radius_km <= 50:
-        base_type = "tactical"
-    elif time_h <= 27 and radius_km <= 300:
-        base_type = "operational"
-    else:
-        base_type = "strategic"
-
-    # Корекція по payload:
-    # 10+ кг → мінімум оперативна, 100+ кг → стратегічна
-    if payload_kg >= 100:
-        return "strategic"
-    if payload_kg >= 10 and base_type == "tactical":
+        return "tactical"
+    if time_h <= 27 and radius_km <= 300:
         return "operational"
-
-    return base_type
+    return "strategic"
 
 
 def choose_propulsion(mission_type, low_noise, budget):
-    """
-    Вибір типу силової установки.
-    """
     if mission_type == "tactical" and low_noise and budget < 7000:
         return "electric"
     if mission_type == "operational":
@@ -51,265 +30,167 @@ def choose_propulsion(mission_type, low_noise, budget):
     return "turbine"
 
 
-# Шаблонні аеродинамічні параметри (геометрія, а не маса)
+# -------------------------------------------------
+# 2) ШАБЛОНИ ПЛАНЕРА
+# -------------------------------------------------
 TEMPLATES = {
-    "tactical": {
-        "emptyMass_kg": 2.0,          # Базова структурна маса для легкого БПЛА
-        "wingArea_m2": 0.8,
-        "Cd": 0.035,
-        "cruiseSpeed_mps": 20,
-        "rho": 1.225
-    },
-    "operational": {
-        "emptyMass_kg": 50.0,         # Базова структурна маса для оперативного
-        "wingArea_m2": 8.0,
-        "Cd": 0.04,
-        "cruiseSpeed_mps": 60,
-        "rho": 1.225
-    },
-    "strategic": {
-        "emptyMass_kg": 1500.0,       # Базова структурна маса для стратегічного
-        "wingArea_m2": 40.0,
-        "Cd": 0.03,
-        "cruiseSpeed_mps": 150,
-        "rho": 1.225
-    }
+    "tactical": {"emptyMass_kg": 2, "Cd": 0.035, "S": 0.8, "v": 20},
+    "operational": {"emptyMass_kg": 50, "Cd": 0.04, "S": 8, "v": 60},
+    "strategic": {"emptyMass_kg": 1500, "Cd": 0.03, "S": 40, "v": 150},
 }
 
 PROP = {
-    "electric": {
-        "propEfficiency": 0.8,
-        "systemEfficiency": 0.8,
-        "batteryDensity_Wh_kg": 220  # Wh/кг
-    },
-    "piston_engine": {
-        "propEfficiency": 0.8,
-        "BSFC_kg_kWh": 0.25          # кг/кВт·год
-    },
-    "turbine": {
-        "propEfficiency": 0.85,
-        "BSFC_kg_kWh": 0.3           # кг/кВт·год
-    }
+    "electric": {"eta_prop": 0.8, "eta_sys": 0.8, "battery_wh_kg": 220},
+    "piston_engine": {"eta_prop": 0.8, "bsfc": 0.25},  # kg/kWh
+    "turbine": {"eta_prop": 0.85, "bsfc": 0.3},
 }
 
-
-def drag_and_thrust(rho, v, S, Cd):
-    """
-    Аеродинамічний опір і тяга в крейсері:
-    D = 0.5 * ρ * V^2 * S * Cd
-    В сталому горизонтальному польоті T = D.
-    """
-    D = 0.5 * rho * v * v * S * Cd
-    return D, D
+RHO = 1.225
 
 
-def cruise_power(thrust, v, eta):
-    """
-    Необхідна потужність:
-    P = T * V / η
-    """
-    return thrust * v / eta
+# -------------------------------------------------
+# 3) РОЗРАХУНКИ (з формул зі свого PDF)
+# -------------------------------------------------
+
+def aerodynamic_drag(rho, v, S, Cd):
+    return 0.5 * rho * v * v * S * Cd
 
 
-def electric_energy_and_mass(power_W, time_h, density_Wh_kg, system_eta):
-    """
-    Для електро:
-    t = (E * η) / P  →  E = (P * t) / η
-    Масу батареї: m = E / ρ_бат
-    """
-    required_Wh = power_W * time_h / system_eta
-    mass = required_Wh / density_Wh_kg
-    return required_Wh, mass
+def cruise_power(T, v, eta):
+    return T * v / eta
+
+
+def electric_energy(power_W, t_h, wh_kg, eta):
+    Wh = (power_W * t_h) / eta
+    mass = Wh / wh_kg
+    return Wh, mass
+
+
+def fuel_mass(power_W, t_h, bsfc):
+    return t_h * bsfc * (power_W / 1000)
 
 
 def performance(v_mps, time_h):
-    """
-    Дальність і радіус:
-    V [м/с] → км/год = V * 3.6
-    Range_km = V_kmh * t
-    Radius = Range / 2
-    """
-    range_km = v_mps * 3.6 * time_h
-    radius_km = range_km / 2.0
-    return range_km, radius_km
+    dist = v_mps * time_h * 3.6
+    rad = dist / 2
+    return dist, rad
 
 
-# -------------------------
-# GEMINI API ВИКЛИК
-# -------------------------
+# -------------------------------------------------
+# 4) РЕКОМЕНДОВАНІ КОМПОНЕНТИ ПО БЮДЖЕТУ
+# -------------------------------------------------
+def component_recommendations(propulsion, budget):
+    result = {}
 
-def gemini_explanation(mission, propulsion, payload, empty_mass, energy_mass, radius):
-    """
-    Генерує стислий технічний опис конфігурації БПЛА.
-    """
+    if propulsion == "electric":
+        result["engine"] = {"model": "T-Motor U15L", "price": 1800, "reason": "Висока тяга, низький шум, оптимально для тактичних БПЛА."}
+        result["propeller"] = {"model": "T-Motor 30x10 CF", "price": 250, "reason": "Легкий карбон, високий ККД."}
+        result["electronics"] = {"model": "Cube Orange+ Here4 RTK", "price": 1200, "reason": "Професійна навігація для точних місій."}
+    elif propulsion == "piston_engine":
+        result["engine"] = {"model": "Rotax 582 UL", "price": 6500, "reason": "Відмінне співвідношення маси, ККД та вартості."}
+        result["propeller"] = {"model": "E-Props 1.9m VP", "price": 2300, "reason": "Змінний крок, високий ККД."}
+        result["electronics"] = {"model": "Pixhawk Cube Orange", "price": 900, "reason": "Надійний автопілот для операційних місій."}
+    else:
+        result["engine"] = {"model": "PBS TJ40", "price": 45000, "reason": "Легкий турбореактивний двигун для високошвидкісних платформ."}
+        result["propeller"] = {"model": "N/A", "price": 0, "reason": "Реактивний двигун не потребує пропелера."}
+        result["electronics"] = {"model": "Cube Orange+ ADS-B", "price": 1500, "reason": "Потрібно для безпеки високошвидкісних місій."}
 
+    return result
+
+
+# -------------------------------------------------
+# 5) AI ВИСНОВОК (чіткий, технічний)
+# -------------------------------------------------
+def gemini_summary(mission, propulsion, mass, radius):
     if not API_KEY:
-        return "Помилка: API ключ Gemini не налаштований."
+        return "AI недоступний: немає GEMINI_API_KEY"
 
-    system_prompt = (
-        "Ти досвідчений інженер-конструктор БПЛА. "
-        "Зроби стислий технічний висновок у 3–5 реченнях українською мовою. "
-        "Оціни адекватність: типу місії, типу двигуна, співвідношення корисного "
-        "навантаження до злітної маси та реалістичність радіуса дії. "
-        "Стиль — інженерний, без пафосу."
-    )
+    prompt = f"""
+Ти інженер-конструктор БПЛА. Сформуй короткий (3-5 речень) технічний висновок:
 
-    user_query = f"""
-    Проаналізуй конфігурацію БПЛА:
-    - Тип місії: {mission}
-    - Тип двигуна: {propulsion}
-    - Корисне навантаження (боєголовка/сенсори): {payload:.1f} кг
-    - Структурна маса планера (без батареї/палива): {empty_mass:.1f} кг
-    - Маса енергетичної системи (АКБ/паливо): {energy_mass:.1f} кг
-    - Розрахунковий радіус дії: {radius:.1f} км
+- тип місії: {mission}
+- силова установка: {propulsion}
+- злітна маса: {mass:.1f} кг
+- реальний радіус дії: {radius:.1f} км
 
-    Зроби короткий технічний висновок: чи виглядає така конфігурація збалансованою,
-    де основні вузькі місця, та для яких задач вона підходить найкраще.
-    """
+Оціни ефективність, запас енергії, придатність до завдання.
+"""
 
-    payload_body = {
-        "contents": [
-            {"parts": [{"text": user_query}]}
-        ],
-        "systemInstruction": {
-            "parts": [{"text": system_prompt}]
-        },
+    payload = {
+        "contents": [{"parts": [{"text": prompt}]}],
     }
 
+    r = requests.post(f"{GEMINI_API_URL}?key={API_KEY}", json=payload).json()
     try:
-        full_url = f"{GEMINI_API_URL}?key={API_KEY}"
-        response = requests.post(full_url, json=payload_body)
-        response.raise_for_status()
-
-        result = response.json()
-        candidate = result.get("candidates", [{}])[0]
-        text_part = candidate.get("content", {}).get("parts", [{}])[0]
-        ai_text = text_part.get("text", "Не вдалося отримати пояснення від AI.")
-
-        return ai_text
-
-    except requests.exceptions.RequestException as e:
-        print(f"Помилка виклику Gemini API: {e}")
-        return f"Помилка зв'язку з AI сервісом: {e}"
-    except Exception as e:
-        print(f"Виникла несподівана помилка: {e}")
-        return "Виникла несподівана помилка при обробці відповіді AI."
+        return r["candidates"][0]["content"]["parts"][0]["text"]
+    except:
+        return "AI не зміг сформувати висновок."
 
 
-# -------------------------
-# API
-# -------------------------
-
+# -------------------------------------------------
+# 6) API ENDPOINT
+# -------------------------------------------------
 @app.route("/api/configure", methods=["POST"])
 def configure():
+    d = request.get_json()
 
-    data = request.get_json()
+    time_h = float(d["timeHours"])
+    radius_req = float(d["radiusKm"])
+    payload = float(d["payloadKg"])
+    lowNoise = bool(d["lowNoise"])
+    budget = float(d["budget"])
 
-    time_h = float(data["timeHours"])
-    radius_req_km = float(data["radiusKm"])
-    payload = float(data["payloadKg"])       # це ТІЛЬКИ корисне навантаження (вибухівка/сенсори)
-    lowNoise = bool(data["lowNoise"])
-    budget = float(data["budget"])
+    mission = classify_mission(time_h, radius_req)
+    propulsion = choose_propulsion(mission, lowNoise, budget)
 
-    # 1. Класифікація місії (з урахуванням payload)
-    mission_type = classify_mission(time_h, radius_req_km, payload)
-    propulsion_type = choose_propulsion(mission_type, lowNoise, budget)
+    air = TEMPLATES[mission]
+    prop = PROP[propulsion]
 
-    air = TEMPLATES[mission_type]
-    prop = PROP[propulsion_type]
+    D = aerodynamic_drag(RHO, air["v"], air["S"], air["Cd"])
+    T = D
 
-    # 2. Аеродинаміка
-    D, T = drag_and_thrust(
-        air["rho"],
-        air["cruiseSpeed_mps"],
-        air["wingArea_m2"],
-        air["Cd"]
-    )
+    P = cruise_power(T, air["v"], prop["eta_prop"])
 
-    # 3. Потрібна потужність
-    P = cruise_power(T, air["cruiseSpeed_mps"], prop["propEfficiency"])
-
-    # 4. Енергосистема: батарея / паливо
-    if propulsion_type == "electric":
-        required_Wh, batt_mass = electric_energy_and_mass(
-            P,
-            time_h,
-            prop["batteryDensity_Wh_kg"],
-            prop["systemEfficiency"]
-        )
-        # Мінімальна маса батареї (щоб не було "0.5 кг батарея на 2 години")
-        if batt_mass < 3.0:
-            batt_mass = 3.0
-            # енергії тоді більше, ніж треба; для спрощення не перераховуємо час.
+    if propulsion == "electric":
+        Wh, energy_mass = electric_energy(P, time_h, prop["battery_wh_kg"], prop["eta_sys"])
     else:
-        # Для ДВЗ: оцінка маси палива
-        # fuel_mass = t * BSFC * P[kW]
-        fuel_mass = time_h * prop["BSFC_kg_kWh"] * (P / 1000.0)
-        required_Wh = None
-        batt_mass = fuel_mass
+        Wh = None
+        energy_mass = fuel_mass(P, time_h, prop["bsfc"])
 
-    # 5. Структурна маса
-    # Беремо базову масу шаблону і додаємо корекцію для великих payload
-    base_empty = air["emptyMass_kg"]
-    # Якщо payload значно більший за базовий планер → масштабуємо
-    if payload > base_empty:
-        # дуже проста модель: empty_mass ≈ max(base_empty, 0.4 * (payload + batt_mass))
-        empty_mass = max(base_empty, 0.4 * (payload + batt_mass))
-    else:
-        empty_mass = base_empty
+    MTOW = air["emptyMass_kg"] + payload + energy_mass
 
-    # 6. Злітна маса (MTOW)
-    takeoff_mass = empty_mass + payload + batt_mass
+    range_km, max_radius = performance(air["v"], time_h)
 
-    # 7. Дальність / реальний радіус (по крейсерській швидкості та часу)
-    total_dist_km, radius_est_km = performance(air["cruiseSpeed_mps"], time_h)
+    meets = max_radius >= radius_req
 
-    # 8. Виклик Gemini для технічного висновку
-    ai_expl = gemini_explanation(
-        mission_type,
-        propulsion_type,
-        payload,
-        empty_mass,
-        batt_mass,
-        radius_est_km
-    )
+    components = component_recommendations(propulsion, budget)
+
+    ai = gemini_summary(mission, propulsion, MTOW, max_radius)
 
     return jsonify({
         "mission": {
-            "missionType": mission_type,
-            "recommendedPropulsion": propulsion_type
+            "missionType": mission,
+            "propulsion": propulsion,
+            "meetsRadius": meets,
+            "requiredRadius": radius_req,
+            "achievableRadius": round(max_radius, 1)
+        },
+        "gmgroup": {
+            "recommendedProp": components
         },
         "calculations": {
-            "power": {
-                "cruisePower_W": round(P, 2)
-            },
-            "energy": {
-                "requiredEnergy_Wh": round(required_Wh, 2) if required_Wh is not None else None,
-                "batteryOrFuelMass_kg": round(batt_mass, 2)
-            },
-            "mass": {
-                "emptyMass_kg": round(empty_mass, 2),
-                "payloadMass_kg": round(payload, 2),
-                "takeoffMass_kg": round(takeoff_mass, 2)
-            },
-            "performance": {
-                "achievableRadius_km": round(radius_est_km, 1),
-                "achievableRange_km": round(total_dist_km, 1)
-            },
-            "requirementsCheck": {
-                "meetsTime": True,
-                "meetsRadius": radius_est_km >= radius_req_km
-            }
+            "drag_N": round(D, 2),
+            "power_W": round(P, 1),
+            "energy_Wh": round(Wh, 1) if Wh else None,
+            "fuelOrBattery_kg": round(energy_mass, 2),
+            "mtow_kg": round(MTOW, 2),
+            "range_km": round(range_km, 1)
         },
-        "aiComment": ai_expl
+        "ai": {
+            "summary": ai
+        }
     })
 
 
-# -------------------------
-# FLASK RUN
-# -------------------------
-
 if __name__ == "__main__":
-    port = int(os.environ.get("PORT", 5000))
-    print("Running Flask on port", port)
-    app.run(host="0.0.0.0", port=port, debug=True)
+    app.run(host="0.0.0.0", port=int(os.environ.get("PORT", 5000)))
