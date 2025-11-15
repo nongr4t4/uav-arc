@@ -470,10 +470,8 @@ footer.footer {
   border: 1px solid var(--border-subtle);
   border-left: none;
   border-right: none;
-  margin-top: 40px;
-  margin-left: -24px;
-  margin-right: -24px;
-  padding: 32px 40px;
+  margin-top: 0px;
+  padding: 20px 40px;
   position: relative;
   overflow: hidden;
 }
