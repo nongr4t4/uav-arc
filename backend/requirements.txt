@@ -1,2 +1,6 @@
 flask
+<<<<<<< HEAD
 gunicorn
+=======
+flask-cors
+>>>>>>> bf8649e (Fix requirements conflict)
