@@ -1,14 +1,17 @@
 from flask import Flask, request, jsonify
 from flask_cors import CORS
 import os
-from openai import OpenAI
+import requests # Використовуємо requests для HTTP-запитів до Gemini API
 
 app = Flask(__name__)
 CORS(app)
 
-client = OpenAI(api_key="")
-
-
+# -------------------------
+# КОНФІГУРАЦІЯ GEMINI API
+# -------------------------
+GEMINI_API_URL = "https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash-preview-09-2025:generateContent"
+# Залиште порожнім, якщо не використовуєте змінну середовища
+API_KEY = os.environ.get("GEMINI_API_KEY", "") 
 
 # -------------------------
 # ЛОГІКА (СПРОЩЕНА)
@@ -23,6 +26,9 @@ def classify_mission(time_h, radius_km):
 
 
 def choose_propulsion(mission_type, low_noise, budget):
+    # Примітка: оригінальна логіка містила client.responses.create, яка не існує. 
+    # Я зберігаю оригінальну логіку вибору, але припускаю, що "client" був
+    # Placeholder для чогось іншого.
     if mission_type == "tactical" and low_noise and budget < 7000:
         return "electric"
     if mission_type == "operational":
@@ -59,32 +65,64 @@ def electric_energy_and_mass(power_W, time_h, density_Wh_kg, system_eta):
 
 
 def performance(v_mps, time_h):
-    dist = v_mps * time_h / 1000
+    dist = v_mps * time_h * 3.6 # v_mps * time_s / 1000
     return dist, dist / 2
 
 
 
 # -------------------------
-# CHATGPT
+# GEMINI API ВИКЛИК
 # -------------------------
 
-def chatgpt_explanation(mission, propulsion, mass, radius):
-    prompt = f"""
-Ти інженер БПЛА. Поясни людською мовою:
+def gemini_explanation(mission, propulsion, mass, radius):
+    """Генерує пояснення за допомогою Gemini 2.5 Flash."""
+    
+    if not API_KEY:
+        return "Помилка: API ключ Gemini не налаштований."
 
-- тип місії: {mission}
-- двигун: {propulsion}
-- маса: {mass:.2f} кг
-- радіус: {radius:.1f} км
+    system_prompt = "Ти інженер БПЛА. Поясни людською мовою, використовуючи лише 3–5 речень, українською мовою."
+    
+    user_query = f"""
+    Проаналізуй наступні параметри конфігурації БПЛА і поясни їх:
+    - Тип місії: {mission}
+    - Тип двигуна: {propulsion}
+    - Злітна маса: {mass:.2f} кг
+    - Розрахунковий радіус дії: {radius:.1f} км
+    """
+    
+    payload = {
+        "contents": [
+            {"parts": [{"text": user_query}]}
+        ],
+        "systemInstruction": {
+            "parts": [{"text": system_prompt}]
+        },
+        # Вмикаємо Google Search Grounding для більш обґрунтованої відповіді
+        "tools": [{"google_search": {}}],
+    }
 
-3–5 речень, українською.
-"""
-    res = client.responses.create(
-        model="gpt-4.1",
-        input=prompt
-    )
-    return res.output_text
+    try:
+        full_url = f"{GEMINI_API_URL}?key={API_KEY}"
+        
+        # Виконуємо POST запит до Gemini API
+        response = requests.post(full_url, json=payload)
+        response.raise_for_status() # Обробка помилок HTTP
+        
+        result = response.json()
+        
+        # Видобуваємо згенерований текст
+        candidate = result.get('candidates', [{}])[0]
+        text_part = candidate.get('content', {}).get('parts', [{}])[0]
+        ai_text = text_part.get('text', 'Не вдалося отримати пояснення від AI.')
 
+        return ai_text
+
+    except requests.exceptions.RequestException as e:
+        print(f"Помилка виклику Gemini API: {e}")
+        return f"Помилка зв'язку з AI сервісом: {e}"
+    except Exception as e:
+        print(f"Виникла несподівана помилка: {e}")
+        return "Виникла несподівана помилка при обробці відповіді AI."
 
 
 # -------------------------
@@ -96,8 +134,10 @@ def configure():
 
     data = request.get_json()
 
+    # Перетворення радіусу з km на m для правильного використання в classify_mission
     time_h = float(data["timeHours"])
-    radius = float(data["radiusKm"])
+    # Перетворення радіусу з km на m для логіки, хоча логіка в km, залишаємо km
+    radius = float(data["radiusKm"]) 
     payload = float(data["payloadKg"])
     lowNoise = bool(data["lowNoise"])
     budget = float(data["budget"])
@@ -108,7 +148,9 @@ def configure():
     air = TEMPLATES[mission_type]
     prop = PROP[propulsion_type]
 
+    # Розрахунок тяги та опору (D=T)
     D, T = drag_and_thrust(air["rho"], air["cruiseSpeed_mps"], air["wingArea_m2"], air["Cd"])
+    # Розрахунок необхідної потужності
     P = cruise_power(T, air["cruiseSpeed_mps"], prop["propEfficiency"])
 
     if propulsion_type == "electric":
@@ -116,15 +158,19 @@ def configure():
             P, time_h, prop["batteryDensity_Wh_kg"], prop["systemEfficiency"]
         )
     else:
-        fuel_mass = time_h * prop["BSFC_kg_kWh"] * (P / 1000)
+        # Для двигунів внутрішнього згоряння
+        # P / 1000 перетворює Вт у кВт
+        fuel_mass = time_h * prop["BSFC_kg_kWh"] * (P / 1000) 
         required_Wh = None
         batt_mass = fuel_mass
 
     takeoff_mass = air["emptyMass_kg"] + payload + batt_mass
 
-    total_dist, radius_est = performance(air["cruiseSpeed_mps"], time_h)
+    # Розрахунок реальної дальності/радіусу на основі параметрів шаблону та часу
+    total_dist_km, radius_est_km = performance(air["cruiseSpeed_mps"], time_h)
 
-    ai_expl = chatgpt_explanation(mission_type, propulsion_type, takeoff_mass, radius_est)
+    # Виклик Gemini для пояснення
+    ai_expl = gemini_explanation(mission_type, propulsion_type, takeoff_mass, radius_est_km)
 
     return jsonify({
         "mission": {
@@ -132,15 +178,15 @@ def configure():
             "recommendedPropulsion": propulsion_type
         },
         "calculations": {
-            "power": {"cruisePower_W": P},
+            "power": {"cruisePower_W": round(P, 2)},
             "energy": {
-                "requiredEnergy_Wh": required_Wh,
-                "batteryOrFuelMass_kg": batt_mass
+                "requiredEnergy_Wh": round(required_Wh, 2) if required_Wh is not None else None,
+                "batteryOrFuelMass_kg": round(batt_mass, 2)
             },
-            "mass": {"takeoffMass_kg": takeoff_mass},
+            "mass": {"takeoffMass_kg": round(takeoff_mass, 2)},
             "performance": {
-                "achievableRadius_km": radius_est,
-                "achievableRange_km": total_dist
+                "achievableRadius_km": round(radius_est_km, 1),
+                "achievableRange_km": round(total_dist_km, 1)
             }
         },
         "aiComment": ai_expl
@@ -148,12 +194,11 @@ def configure():
 
 
 # -------------------------
-# FLASK RUN (БЕЗ GUNICORN)
+# FLASK RUN
 # -------------------------
 
 if __name__ == "__main__":
     port = int(os.environ.get("PORT", 5000))
     print("Running Flask on port", port)
-    app.run(host="0.0.0.0", port=port)
-
-
+    # Уникаємо використання gunicorn для простоти, як в оригінальному коді
+    app.run(host="0.0.0.0", port=port, debug=True)
