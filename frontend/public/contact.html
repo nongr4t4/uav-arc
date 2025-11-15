@@ -2,122 +2,165 @@
 <html lang="uk">
 <head>
   <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>Contact · UAV Mission Configurator</title>
 
-  <!-- Tailwind CSS CDN -->
+  <!-- Твої основні стилі (як у index/About) -->
+  <link rel="stylesheet" href="styles.css">
+
+  <!-- Tailwind тільки для нових елементів форми -->
   <script src="https://cdn.tailwindcss.com"></script>
-
-  <!-- Фон у стилі твоєї теми -->
-  <style>
-    body {
-      background: radial-gradient(circle at top, #26232b 0, #08070a 50%, #050507);
-    }
-  </style>
 </head>
-<body class="min-h-screen text-gray-200">
-
-  <!-- HEADER -->
-  <header class="w-full border-b border-gray-700/40 bg-black/30 backdrop-blur-lg">
-    <div class="max-w-6xl mx-auto px-6 py-4 flex justify-between items-center">
-
-      <!-- LOGO -->
-      <div class="flex items-center gap-4">
-        <div class="w-10 h-10 rounded-full border border-teal-400 flex items-center justify-center">
-          <div class="w-5 h-4 border border-teal-400 relative">
-            <div class="absolute left-0 w-full h-0.5 bg-teal-400 -top-1"></div>
-            <div class="absolute left-0 w-full h-0.5 bg-teal-400 -bottom-1"></div>
-          </div>
+<body>
+  <div class="shell">
+    <!-- HEADER такий самий, як на інших сторінках -->
+    <header>
+      <div class="header-left">
+        <div class="logo-circle">
+          <img src="drone.png" alt="UAV Mission Configurator" style="width: 100%; height: 100%; object-fit: cover; border-radius: 50%;">
         </div>
-
-        <div>
-          <div class="text-sm tracking-widest uppercase">UAV Mission Configurator</div>
-          <div class="text-xs text-gray-400">by EXPLOITCREW</div>
+        <div class="brand-block">
+          <div class="brand-title">UAV Mission Configurator</div>
+          <div class="brand-sub">by EXPLOITCREW · AI-assisted UAV engineering tool</div>
         </div>
       </div>
 
-      <!-- NAVIGATION -->
-      <nav class="flex gap-8 text-sm">
-        <a href="index.html" class="text-gray-400 hover:text-white">Configurate</a>
-        <a href="docs.html" class="text-gray-400 hover:text-white">Docs</a>
-        <a href="Contact.html" class="text-white font-semibold">Contact</a>
-        <a href="About.html" class="text-gray-400 hover:text-white">About</a>
-      </nav>
-    </div>
-  </header>
+      <div class="header-right">
+        <nav>
+          <a href="index.html">Configurate</a>
+          <a href="docs.html">Docs</a>
+          <a href="contact.html" style="color:#ffffff;">Contact</a>
+          <a href="about.html">About</a>
+        </nav>
+        <div class="pill-beta">Prototype</div>
+      </div>
+    </header>
 
-  <!-- MAIN SECTION -->
-  <main class="max-w-5xl mx-auto px-6 py-10">
+    <!-- MAIN -->
+    <main style="margin-top:18px; display:block;">
+      <section class="panel">
+        <div class="panel-inner">
+          <h1 class="hero-title">Contact us</h1>
+          <p class="hero-sub">
+            Якщо ви хочете протестувати UAV Mission Configurator у навчальному процесі,
+            інтегрувати його в курс/лабораторну чи обговорити інженерні задачі — напишіть нам.
+          </p>
 
-    <h1 class="text-3xl font-bold mb-4">Contact Us</h1>
-    <p class="text-gray-400 mb-10 max-w-2xl">
-      Якщо ви хочете співпрацювати, протестувати наш сервіс у навчальному процесі 
-      або інтегрувати його в свої інженерні модулі — напишіть нам.
-    </p>
+          <!-- Верхні інформаційні картки, в тому ж стилі, що й About -->
+          <div class="cards" style="margin-top:10px;">
+            <div class="card">
+              <div class="card-label">Education</div>
+              <div class="card-title">Навчальні заклади</div>
+              <p>
+                Викладачі та кафедри БПЛА / військової підготовки можуть використовувати сервіс
+                як навчальний інструмент для демонстрації впливу параметрів місії на конфігурацію БПЛА.
+              </p>
+            </div>
 
-    <!-- CONTACT CONTAINER -->
-    <div class="bg-black/40 border border-gray-700/40 rounded-xl p-8 shadow-xl backdrop-blur-md">
+            <div class="card">
+              <div class="card-label">Engineering</div>
+              <div class="card-title">R&amp;D / інженерні команди</div>
+              <p>
+                Попередній підбір силової установки, порівняння варіантів, оцінка часу польоту
+                та радіуса дії для різних конфігурацій без ручного перебору таблиць.
+              </p>
+              <span class="pill-tag">
+                • Rapid mission sketching
+              </span>
+            </div>
 
-      <form class="grid grid-cols-1 md:grid-cols-2 gap-6">
+            <div class="card">
+              <div class="card-label">Other</div>
+              <div class="card-title">Співпраця та ідеї</div>
+              <p>
+                Якщо у вас є ідеї щодо нових модулів, інтеграцій або хочете доєднатись до розробки —
+                ми відкриті до діалогу.
+              </p>
+            </div>
+          </div>
 
-        <!-- NAME -->
-        <div class="col-span-1">
-          <label class="block text-sm text-gray-400 mb-1">Ваше ім’я</label>
-          <input 
-            type="text" 
-            class="w-full rounded-lg bg-black/50 border border-gray-700 p-3 text-gray-200 focus:border-teal-400 outline-none"
-            placeholder="Nikita Yevych"
-          />
+          <!-- Контактна форма: тут вже підключаємо Tailwind-класи -->
+          <div style="margin-top:20px;">
+            <div class="right-title-row">
+              <div>Напишіть нам</div>
+              <span>Форма зворотнього звʼязку · прототип</span>
+            </div>
+
+            <form class="grid-cols-2" style="margin-top:10px; gap:12px;">
+
+              <!-- Name -->
+              <div class="field-group">
+                <div class="field-label">Ваше імʼя</div>
+                <input
+                  type="text"
+                  placeholder="Nikita"
+                  class="w-full bg-black/40 text-gray-100 text-sm mt-1 px-2 py-1 rounded-md border border-gray-700 focus:outline-none focus:ring-1 focus:ring-teal-400 focus:border-teal-400"
+                />
+                <div class="field-helper">Як до вас звертатись у відповіді.</div>
+              </div>
+
+              <!-- Email -->
+              <div class="field-group">
+                <div class="field-label">Email</div>
+                <input
+                  type="email"
+                  placeholder="example@gmail.com"
+                  class="w-full bg-black/40 text-gray-100 text-sm mt-1 px-2 py-1 rounded-md border border-gray-700 focus:outline-none focus:ring-1 focus:ring-teal-400 focus:border-teal-400"
+                />
+                <div class="field-helper">Ми використаємо його тільки для зворотнього звʼязку.</div>
+              </div>
+
+              <!-- Тип запиту -->
+              <div class="field-group">
+                <div class="field-label">Тип запиту</div>
+                <select
+                  class="w-full bg-black/40 text-gray-100 text-sm mt-1 px-2 py-1 rounded-md border border-gray-700 focus:outline-none focus:ring-1 focus:ring-teal-400 focus:border-teal-400"
+                >
+                  <option>Навчання / військова кафедра</option>
+                  <option>Інженерний запит (R&amp;D)</option>
+                  <option>Технічне питання</option>
+                  <option>Співпраця</option>
+                </select>
+                <div class="field-helper">Допоможе нам швидше зорієнтуватись.</div>
+              </div>
+
+              <!-- Порожній блок для вирівнювання сітки -->
+              <div class="field-group" style="opacity:0; pointer-events:none;">
+                <div class="field-label">.</div>
+                <div class="field-helper">.</div>
+              </div>
+
+              <!-- Message (на всю ширину) -->
+              <div class="field-group" style="grid-column:1 / -1;">
+                <div class="field-label">Повідомлення</div>
+                <textarea
+                  rows="4"
+                  placeholder="Опишіть вашу задачу, формат співпраці або питання..."
+                  class="w-full bg-black/40 text-gray-100 text-sm mt-1 px-2 py-2 rounded-md border border-gray-700 focus:outline-none focus:ring-1 focus:ring-teal-400 focus:border-teal-400"
+                ></textarea>
+              </div>
+
+              <!-- Button -->
+              <div style="grid-column:1 / -1; display:flex; justify-content:flex-end; margin-top:4px;">
+                <button
+                  type="button"
+                  class="px-5 py-2 rounded-full bg-teal-400 text-black text-sm font-semibold shadow-lg shadow-teal-400/30 hover:bg-teal-300 transition"
+                >
+                  Надіслати →
+                </button>
+              </div>
+            </form>
+
+            <div class="ai-explain" style="margin-top:14px;">
+              <p>
+                <strong>Примітка:</strong> на цьому етапі форма працює як прототип інтерфейсу.
+                Пізніше вона буде підключена до бекенду або email-сервісу для реальних запитів.
+              </p>
+            </div>
+          </div>
+
         </div>
-
-        <!-- EMAIL -->
-        <div class="col-span-1">
-          <label class="block text-sm text-gray-400 mb-1">Email</label>
-          <input 
-            type="email" 
-            class="w-full rounded-lg bg-black/50 border border-gray-700 p-3 text-gray-200 focus:border-teal-400 outline-none"
-            placeholder="example@gmail.com"
-          />
-        </div>
-
-        <!-- REQUEST TYPE -->
-        <div class="col-span-2">
-          <label class="block text-sm text-gray-400 mb-1">Тип запиту</label>
-          <select 
-            class="w-full rounded-lg bg-black/50 border border-gray-700 p-3 text-gray-200 focus:border-teal-400 outline-none">
-            <option>Навчання / військова кафедра</option>
-            <option>Інженерний запит (R&D)</option>
-            <option>Технічне питання</option>
-            <option>Співпраця</option>
-          </select>
-        </div>
-
-        <!-- MESSAGE -->
-        <div class="col-span-2">
-          <label class="block text-sm text-gray-400 mb-1">Ваше повідомлення</label>
-          <textarea 
-            rows="5"
-            class="w-full rounded-lg bg-black/50 border border-gray-700 p-3 text-gray-200 focus:border-teal-400 outline-none"
-            placeholder="Напишіть ваше питання або пропозицію..."></textarea>
-        </div>
-
-        <!-- BUTTON -->
-        <div class="col-span-2 flex justify-end">
-          <button
-            class="px-6 py-3 rounded-full bg-teal-400 text-black font-semibold hover:bg-teal-300 shadow-lg shadow-teal-400/20 transition">
-            Надіслати →
-          </button>
-        </div>
-
-      </form>
-    </div>
-
-  </main>
-
-  <!-- FOOTER -->
-  <footer class="text-center text-gray-500 text-xs py-6">
-    UAV Mission Configurator © EXPLOITCREW · 2025
-  </footer>
-
+      </section>
+    </main>
+  </div>
 </body>
 </html>
