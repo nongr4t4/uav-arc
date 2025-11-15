@@ -30,6 +30,7 @@
 	</div>
 
 	<script>
+		const BACKEND_URL = 'https://uav-arc-backend.onrender.com';
 		const out = document.getElementById('output');
 		const timeEl = document.getElementById('time');
 		function updateTime(){ timeEl.textContent = new Date().toLocaleString(); }
@@ -38,7 +39,7 @@
 		async function ping(){
 			out.textContent = 'Виконується /ping...';
 			try{
-				const res = await fetch('/ping', {cache:'no-store'});
+				const res = await fetch(BACKEND_URL + '/ping', {cache:'no-store'});
 				const data = await res.json();
 				out.textContent = JSON.stringify({ok:res.ok, status:res.status, body:data}, null, 2);
 			}catch(err){ out.textContent = 'Помилка: '+err.toString(); }
@@ -48,7 +49,7 @@
 			out.textContent = 'Виконується /echo...';
 			try{
 				const payload = {message:'hello from frontend', ts:new Date().toISOString()};
-				const res = await fetch('/echo',{
+				const res = await fetch(BACKEND_URL + '/echo',{
 					method:'POST', headers:{'Content-Type':'application/json'}, body:JSON.stringify(payload)
 				});
 				const data = await res.json();
