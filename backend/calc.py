@@ -1,33 +1,16 @@
-from fastapi import FastAPI
-from pydantic import BaseModel
+from flask import Flask, request, jsonify
+from flask_cors import CORS
 import math
-from openai import OpenAI
 import os
+from openai import OpenAI
 
-app = FastAPI()
+app = Flask(__name__)
+CORS(app)
 
-# -----------------------------
-# 0. ІНІЦІАЛІЗАЦІЯ OPENAI API
-# -----------------------------
-OPENAI_API_KEY = os.environ.get("OPENAI_API_KEY")
-
-client = OpenAI(api_key=OPENAI_API_KEY)
-
+client = OpenAI(api_key=os.environ.get("OPENAI_API_KEY"))
 
 # -----------------------------
-# 1. Вхідні дані користувача
-# -----------------------------
-
-class MissionInput(BaseModel):
-    timeHours: float
-    radiusKm: float
-    payloadKg: float
-    lowNoise: bool
-    budget: float
-
-
-# -----------------------------
-# 2. Класифікація місії
+# Mission logic
 # -----------------------------
 
 def classify_mission(time_h, radius_km):
@@ -45,10 +28,6 @@ def choose_propulsion(mission_type, low_noise, budget):
         return "piston_engine"
     return "turbine"
 
-
-# -----------------------------
-# 3. Шаблони місій
-# -----------------------------
 
 TEMPLATES = {
     "tactical": {
@@ -91,13 +70,9 @@ PROP = {
 }
 
 
-# -----------------------------
-# 4. Формули з умови
-# -----------------------------
-
 def drag_and_thrust(rho, v, S, Cd):
     D = 0.5 * rho * v * v * S * Cd
-    return D, D  # Тяга = Опір
+    return D, D
 
 
 def cruise_power(thrust, v, eta):
@@ -115,15 +90,42 @@ def performance(v_mps, time_h):
     return distance_km, distance_km / 2
 
 
+def chatgpt_explanation(mission, propulsion, mass, radius):
+    prompt = f"""
+Ти інженер БПЛА. Поясни людською мовою:
+
+- тип місії: {mission}
+- обрана ГМГ: {propulsion}
+- маса апарата: {mass:.2f} кг
+- досяжний радіус: {radius:.1f} км
+
+Напиши короткий висновок у 3–5 реченнях.
+"""
+
+    res = client.responses.create(
+        model="gpt-4.1",
+        input=prompt
+    )
+
+    return res.output_text
+
+
 # -----------------------------
-# 5. Маршрут бекенду
+# API ENDPOINT
 # -----------------------------
 
-@app.post("/api/configure")
-def configure_uav(input: MissionInput):
+@app.route("/api/configure", methods=["POST"])
+def configure():
+    input_data = request.json
 
-    mission_type = classify_mission(input.timeHours, input.radiusKm)
-    propulsion_type = choose_propulsion(mission_type, input.lowNoise, input.budget)
+    time_h = float(input_data["timeHours"])
+    radius_km = float(input_data["radiusKm"])
+    payload_kg = float(input_data["payloadKg"])
+    low_noise = bool(input_data["lowNoise"])
+    budget = float(input_data["budget"])
+
+    mission_type = classify_mission(time_h, radius_km)
+    propulsion_type = choose_propulsion(mission_type, low_noise, budget)
 
     air = TEMPLATES[mission_type]
     prop = PROP[propulsion_type]
@@ -143,25 +145,24 @@ def configure_uav(input: MissionInput):
 
     if propulsion_type == "electric":
         required_Wh, battery_mass = electric_energy_and_mass(
-            P, input.timeHours, prop["batteryDensity_Wh_kg"], prop["systemEfficiency"]
+            P, time_h, prop["batteryDensity_Wh_kg"], prop["systemEfficiency"]
         )
     else:
-        fuel_mass = input.timeHours * prop["BSFC_kg_kWh"] * (P / 1000)
+        fuel_mass = time_h * prop["BSFC_kg_kWh"] * (P / 1000)
         required_Wh = None
         battery_mass = fuel_mass
 
-    takeoff_mass = air["emptyMass_kg"] + input.payloadKg + battery_mass
+    takeoff_mass = air["emptyMass_kg"] + payload_kg + battery_mass
 
     total_dist, radius_est = performance(
-        air["cruiseSpeed_mps"], input.timeHours
+        air["cruiseSpeed_mps"], time_h
     )
 
     ai_expl = chatgpt_explanation(
         mission_type, propulsion_type, takeoff_mass, radius_est
     )
 
-    return {
-        "input": input.model_dump(),
+    return jsonify({
         "mission": {
             "missionType": mission_type,
             "recommendedPropulsion": propulsion_type
@@ -182,38 +183,18 @@ def configure_uav(input: MissionInput):
                 "takeoffMass_kg": takeoff_mass
             },
             "performance": {
-                "achievableTime_h": input.timeHours,
+                "achievableTime_h": time_h,
                 "achievableRadius_km": radius_est,
                 "achievableRange_km": total_dist
-            },
-            "requirementsCheck": {
-                "meetsTime": True,
-                "meetsRadius": radius_est >= input.radiusKm
             }
         },
         "aiComment": ai_expl
-    }
+    })
 
 
 # -----------------------------
-# 6. ChatGPT пояснення
+# RUN SERVER (локально)
 # -----------------------------
-
-def chatgpt_explanation(mission, propulsion, mass, radius):
-    prompt = f"""
-Ти інженер БПЛА. Поясни людською мовою:
-
-- тип місії: {mission}
-- обрана ГМГ: {propulsion}
-- маса апарата: {mass:.2f} кг
-- досяжний радіус: {radius:.1f} км
-
-Напиши короткий висновок у 3–5 реченнях.
-"""
-
-    res = client.responses.create(
-        model="gpt-4.1",
-        input=prompt
-    )
-
-    return res.output_text
+if __name__ == "__main__":
+    port = int(os.environ.get("PORT", 443))
+    app.run(host="0.0.0.0", port=port)
