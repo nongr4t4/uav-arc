@@ -1,0 +1,99 @@
+<!DOCTYPE html>
+<html lang="uk">
+<head>
+  <meta charset="UTF-8" />
+  <title>Docs · UAV Mission Configurator</title>
+  <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+  <div class="shell">
+    <!-- HEADER -->
+    <header>
+      <div class="header-left">
+        <a href="index.html" style="display: flex; align-items: center; gap: 1rem; text-decoration: none; cursor: pointer; color: inherit;">
+          <div class="logo-circle">
+            <img src="drone.png" alt="UAV Mission Configurator" style="width: 100%; height: 100%; object-fit: cover; border-radius: 50%;">
+          </div>
+          <div class="brand-block">
+            <div class="brand-title">UAV Mission Configurator</div>
+            <div class="brand-sub">by EXPLOITCREW · AI-assisted UAV engineering tool</div>
+          </div>
+        </a>
+      </div>
+      <div class="header-right">
+        <nav>
+          <a href="index.html">Configurate</a>
+          <a href="docs.html" style="color:#fff;">Docs</a>
+          <a href="contact.html">Contact Us</a>
+          <a href="about.html">About</a>
+        </nav>
+        <div class="pill-beta">Prototype</div>
+      </div>
+    </header>
+
+    <!-- MAIN: DOCS -->
+    <main style="margin-top:18px; display:block;">
+      <section class="panel">
+        <div class="panel-inner">
+          <h1 class="hero-title">Документація</h1>
+          <p class="hero-sub">
+            Тут ви знайдете основну інформацію про використання UAV Mission Configurator, структуру місії, параметри, модулі та API.
+          </p>
+
+          <div class="cards" style="margin-top:10px;">
+            <div class="card">
+              <div class="card-label">Getting started</div>
+              <div class="card-title">Перші кроки</div>
+              <p>
+                1. Відкрийте головну сторінку та натисніть <b>Start configuration</b>.<br>
+                2. Заповніть параметри місії: час польоту, радіус, навантаження тощо.<br>
+                3. Система автоматично підбере клас місії та силову установку.
+              </p>
+            </div>
+            <div class="card">
+              <div class="card-label">Mission params</div>
+              <div class="card-title">Параметри місії</div>
+              <p>
+                <b>Flight time</b> — мінімальний час у повітрі.<br>
+                <b>Radius of action</b> — максимальна відстань.<br>
+                <b>Payload</b> — корисне навантаження.<br>
+                <b>Acoustic signature</b> — рівень шуму.
+              </p>
+            </div>
+            <div class="card">
+              <div class="card-label">Modules</div>
+              <div class="card-title">Модулі системи</div>
+              <p>
+                <b>Mission classifier</b> — визначає клас місії.<br>
+                <b>Powertrain selector</b> — підбирає тип силової установки.<br>
+                <b>Performance calculator</b> — розраховує основні параметри.
+              </p>
+            </div>
+          </div>
+
+          <div class="cards" style="margin-top:16px;">
+            <div class="card">
+              <div class="card-label">API</div>
+              <div class="card-title">REST API (планується)</div>
+              <p>
+                <b>POST /api/calculate</b> — розрахунок місії за параметрами.<br>
+                <b>GET /api/presets</b> — типові місії.<br>
+                <span class="pill-tag">JSON input/output</span>
+              </p>
+            </div>
+            <div class="card">
+              <div class="card-label">FAQ</div>
+              <div class="card-title">Питання та відповіді</div>
+              <p>
+                <b>Чи можна додати свої компоненти?</b> — Так, у майбутньому.<br>
+                <b>Чи є інтеграція з ChatGPT?</b> — Так, для пояснень рішень.<br>
+                <b>Чи можна експортувати звіт?</b> — Планується PDF-експорт.
+              </p>
+            </div>
+          </div>
+        </div>
+      </section>
+    </main>
+  </div>
+</body>
+</html>
