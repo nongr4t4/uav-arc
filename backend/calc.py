@@ -6,7 +6,7 @@ from openai import OpenAI
 app = Flask(__name__)
 CORS(app)
 
-client = OpenAI(api_key="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")
+client = OpenAI(api_key="")
 
 
 
@@ -155,4 +155,5 @@ if __name__ == "__main__":
     port = int(os.environ.get("PORT", 5000))
     print("Running Flask on port", port)
     app.run(host="0.0.0.0", port=port)
+
 
