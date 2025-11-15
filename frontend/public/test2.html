@@ -101,7 +101,7 @@
     <input id="radiusKm" type="number" value="30" step="1"><br>
 
     <label>Корисне навантаження (кг):</label><br>
-    <input id="payloadKg" type="number" value="10" step="0.1"><br>
+    <input id="payloadKg" type="number" value="2" step="0.1"><br>
 
     <label>Низький шум:</label><br>
     <select id="lowNoise">
@@ -110,7 +110,7 @@
     </select><br>
 
     <label>Бюджет ($):</label><br>
-    <input id="budget" type="number" value="50000" step="100"><br><br>
+    <input id="budget" type="number" value="5000" step="100"><br><br>
 
     <button id="calcBtn" onclick="sendRequest()">Розрахувати</button>
 </div>
@@ -182,137 +182,20 @@ async function sendRequest() {
 function renderResult(json, input) {
     const resultBox = document.getElementById("result");
 
-    const mission = json.mission;
-    const calc = json.calculations;
+    const mission = json.mission || {};
+    const calc = json.calculations || {};
     const comps = json.gmgroup?.recommendedProp || {};
     const aiText = json.ai?.summary || "";
     const engine = comps.engine || {};
     const prop = comps.propeller || {};
     const elec = comps.electronics || {};
+    const batt = comps.battery || {};
+    const uav = json.uav || {};
+    const analysis = json.analysis || {};
 
     const meetsRadius = mission.meetsRadius;
     const meetsRadiusPill = meetsRadius
         ? `<span class="pill-ok">радіус досяжний</span>`
         : `<span class="pill-bad">радіус не досягається</span>`;
 
-    // Блок 1 — Вихідні дані
-    const blockInput = `
-        <div class="section">
-            <h2>1. Вхідні вимоги місії</h2>
-            <p><span class="label">Час польоту:</span> ${input.timeHours} год</p>
-            <p><span class="label">Необхідний радіус дії:</span> ${input.radiusKm} км</p>
-            <p><span class="label">Корисне навантаження:</span> ${input.payloadKg} кг</p>
-            <p><span class="label">Вимога до шуму:</span> ${input.lowNoise ? "Низький" : "Може бути підвищений"}</p>
-            <p><span class="label">Бюджет:</span> $${input.budget}</p>
-        </div>
-    `;
-
-    // Блок 2 — Характеристики ГМГ
-    const blockGmg = `
-        <div class="section">
-            <h2>2. Розраховані характеристики ГМГ</h2>
-            <p><span class="label">Клас місії:</span> ${humanMission(mission.missionType)}</p>
-            <p>
-                <span class="label">Тип силової установки:</span> ${humanPropulsion(mission.propulsion)}
-            </p>
-            <p>
-                <span class="label">Реальний досяжний радіус:</span>
-                ${mission.achievableRadius} км
-                (${mission.requiredRadius} км потрібно) ${meetsRadiusPill}
-            </p>
-            <p><span class="label">Розрахункова дальність:</span> ${calc.range_km} км</p>
-            <p><span class="label">Розрахункова тяга / опір (T=D):</span> ${calc.drag_N} Н</p>
-            <p><span class="label">Необхідна потужність у крейсері:</span> ${calc.power_W} Вт</p>
-            <p><span class="label">Маса палива / батареї:</span> ${calc.fuelOrBattery_kg} кг</p>
-            <p><span class="label">Злітна маса (MTOW):</span> ${calc.mtow_kg} кг</p>
-        </div>
-    `;
-
-    // Блок 3 — Обґрунтування вибору ГМГ (як твої приклади)
-    const blockJustification = `
-        <div class="section">
-            <h2>3. Обґрунтування вибору ГМГ</h2>
-            <p>
-                <b>Тип двигуна:</b>
-                ${engine.model ? engine.model + " — " : ""}${humanPropulsion(mission.propulsion)} обрано на основі вимог до
-                тривалості польоту, радіуса дії та бюджету. Така силова установка забезпечує розрахунковий час польоту
-                ${input.timeHours} год і радіус ${mission.achievableRadius} км, що перевищує необхідні ${mission.requiredRadius} км
-                для заданої місії.
-            </p>
-            <p>
-                <b>Пропелер:</b>
-                ${prop.model ? prop.model + " — " : "Рекомендований пропелер — "} 
-                ${prop.reason || "забезпечує прийнятний баланс між тягою та ефективністю в крейсерському режимі."}
-            </p>
-            <p>
-                <b>Альтернативи:</b>
-                при збільшенні бюджету можливе використання більш потужної силової установки або переходу на інший клас
-                двигунів (наприклад, ${mission.missionType === "operational" ? "легку турбіну для збільшення швидкості" : "дизельний ДВЗ з меншою питомою витратою палива"}), 
-                але для даних вимог це не є обов'язковим.
-            </p>
-        </div>
-    `;
-
-    // Блок 4 — Таблиця рекомендованих компонентів
-    const blockComponents = `
-        <div class="section">
-            <h2>4. Рекомендовані компоненти ГМГ (у межах бюджету)</h2>
-            <table>
-                <thead>
-                    <tr>
-                        <th>Підсистема</th>
-                        <th>Модель</th>
-                        <th>Орієнтовна ціна, $</th>
-                        <th>Пояснення вибору</th>
-                    </tr>
-                </thead>
-                <tbody>
-                    <tr>
-                        <td>Двигун</td>
-                        <td>${engine.model || "—"}</td>
-                        <td>${engine.price !== undefined ? engine.price : "—"}</td>
-                        <td>${engine.reason || "—"}</td>
-                    </tr>
-                    <tr>
-                        <td>Пропелер</td>
-                        <td>${prop.model || "—"}</td>
-                        <td>${prop.price !== undefined ? prop.price : "—"}</td>
-                        <td>${prop.reason || "—"}</td>
-                    </tr>
-                    <tr>
-                        <td>Бортова електроніка</td>
-                        <td>${elec.model || "—"}</td>
-                        <td>${elec.price !== undefined ? elec.price : "—"}</td>
-                        <td>${elec.reason || "—"}</td>
-                    </tr>
-                </tbody>
-            </table>
-            <p class="small">
-                * Реальні ціни залежать від постачальника та партії закупівлі. Таблиця показує орієнтовний рівень витрат на ГМГ у
-                структурі загального бюджету $${input.budget}.
-            </p>
-        </div>
-    `;
-
-    // Блок 5 — Інженерний висновок AI
-    const blockAI = `
-        <div class="section">
-            <h2>5. Інженерний висновок (Gemini)</h2>
-            <div style="background:#fafafa; padding:10px 12px; border-radius:8px; border:1px solid #eee;">
-                ${aiText}
-            </div>
-        </div>
-    `;
-
-    resultBox.innerHTML = `
-        ${blockInput}
-        ${blockGmg}
-        ${blockJustification}
-        ${blockComponents}
-        ${blockAI}
-    `;
-}
-</script>
-
-</body>
-</html>
+    //
