@@ -547,8 +547,8 @@
       
       <div class="header-right">
         <nav>
-          <a href="configurator.html"style="color:#fff;">Configurate</a>
-          <a href="scenarios.html" >Scenarios</a>
+          <a href="configurator.html" style="color:#fff;">Сonfigurate</a>
+          <a href="scenarios.html">Scenarios</a>
           <a href="contact.html">Contact Us</a>
           <a href="about.html">About</a>
         </nav>
@@ -620,16 +620,27 @@
               <select class="form-select" id="uavType">
                 <option value="">Оберіть тип...</option>
                 <option value="Квадрокоптер">Квадрокоптер</option>
+                <option value="Гексакоптер">Гексакоптер</option>
+                <option value="Октокоптер">Октокоптер</option>
                 <option value="Літак">Літак</option>
                 <option value="Літак MALE">Літак MALE</option>
-                <option value="Літаюче крило">Літаюче крило</option>
+                <option value="Літаюче крило">Літаюче крило (Delta)</option>
+                <option value="Конвертоплан">Конвертоплан (VTOL)</option>
                 <option value="FPV дрон">FPV дрон</option>
               </select>
             </div>
 
             <div class="form-group">
-              <label class="form-label">Каркас</label>
-              <input type="text" class="form-input" id="frame" placeholder="напр: Карбоновий X-frame">
+              <label class="form-label">Тип каркасу</label>
+              <select class="form-select" id="frame">
+                <option value="">Оберіть каркас...</option>
+                <option value="Карбоновий X-frame">🔷 Карбоновий X-frame (легкий, жорсткий)</option>
+                <option value="Алюмінієвий H-frame">🔶 Алюмінієвий H-frame (міцний, важкий вантаж)</option>
+                <option value="Композитний монокок">✈️ Композитний монокок (літак, низький Cd)</option>
+                <option value="Delta EPP + карбон">🎯 Delta wing EPP + карбон (одноразовий)</option>
+                <option value="Складаний композит">📦 Складаний композитний фюзеляж (транспорт)</option>
+                <option value="Трубчастий алюміній">⚙️ Трубчастий алюмінієвий (бюджетний)</option>
+              </select>
             </div>
 
             <div class="form-group">
@@ -677,6 +688,317 @@
     </div>
   </div>
 
-  <script src="configurator-script.js"></script>
+  <script>
+    const presets = {
+      tactical: {
+        name: 'DJI Mavic 3',
+        uavType: 'Квадрокоптер',
+        frame: 'Карбоновий X-frame',
+        engineType: 'electric',
+        power: 0.4,
+        battery: 200,
+        propDiameter: 9.4,
+        propPitch: 4.5,
+        rpm: 5000,
+        weight: 3,
+        payload: 2,
+        speed: 15,
+        area: 0.15,
+        cd: 0.35
+      },
+      operational: {
+        name: 'Bayraktar TB2',
+        uavType: 'Літак MALE',
+        frame: 'Композитний монокок, 12м',
+        engineType: '4stroke',
+        power: 74.6,
+        fuel: 80,
+        propDiameter: 70,
+        propPitch: 44,
+        rpm: 2400,
+        weight: 191,
+        payload: 50,
+        speed: 38,
+        area: 2.0,
+        cd: 0.035
+      },
+      kamikaze: {
+        name: 'Shahed-136',
+        uavType: 'Літаюче крило',
+        frame: 'Delta EPP + карбон',
+        engineType: '2stroke',
+        power: 6.2,
+        fuel: 11.4,
+        propDiameter: 23,
+        propPitch: 15,
+        rpm: 6800,
+        weight: 18.7,
+        payload: 40,
+        speed: 68,
+        area: 0.52,
+        cd: 0.048
+      }
+    };
+
+    document.getElementById('engineType').addEventListener('change', (e) => {
+      const isElectric = e.target.value === 'electric';
+      document.getElementById('batteryGroup').style.display = isElectric ? 'block' : 'none';
+      document.getElementById('fuelGroup').style.display = isElectric ? 'none' : 'block';
+    });
+
+    document.querySelectorAll('.preset-btn').forEach(btn => {
+      btn.addEventListener('click', function() {
+        document.querySelectorAll('.preset-btn').forEach(b => b.classList.remove('active'));
+        this.classList.add('active');
+        
+        const preset = presets[this.dataset.preset];
+        loadPreset(preset);
+        calculate();
+      });
+    });
+
+    function loadPreset(preset) {
+      document.getElementById('engineType').value = preset.engineType;
+      document.getElementById('engineType').dispatchEvent(new Event('change'));
+      
+      document.getElementById('power').value = preset.power;
+      
+      if (preset.battery) {
+        document.getElementById('battery').value = preset.battery;
+      }
+      if (preset.fuel) {
+        document.getElementById('fuel').value = preset.fuel;
+      }
+      
+      document.getElementById('propDiameter').value = preset.propDiameter;
+      document.getElementById('propPitch').value = preset.propPitch;
+      document.getElementById('rpm').value = preset.rpm;
+      document.getElementById('weight').value = preset.weight;
+      document.getElementById('payload').value = preset.payload;
+      document.getElementById('speed').value = preset.speed;
+      document.getElementById('area').value = preset.area;
+      document.getElementById('cd').value = preset.cd;
+      
+      if (preset.uavType) {
+        document.getElementById('uavType').value = preset.uavType;
+      }
+      if (preset.frame) {
+        document.getElementById('frame').value = preset.frame;
+      }
+    }
+
+    document.getElementById('calculateBtn').addEventListener('click', calculate);
+
+    function calculate() {
+      const engineType = document.getElementById('engineType').value;
+      const power = parseFloat(document.getElementById('power').value);
+      const battery = parseFloat(document.getElementById('battery').value);
+      const fuel = parseFloat(document.getElementById('fuel').value);
+      const propDiameter = parseFloat(document.getElementById('propDiameter').value);
+      const propPitch = parseFloat(document.getElementById('propPitch').value);
+      const rpm = parseFloat(document.getElementById('rpm').value);
+      const weight = parseFloat(document.getElementById('weight').value);
+      const payload = parseFloat(document.getElementById('payload').value);
+      const speed = parseFloat(document.getElementById('speed').value);
+      const area = parseFloat(document.getElementById('area').value);
+      const cd = parseFloat(document.getElementById('cd').value);
+      const uavType = document.getElementById('uavType').value;
+      const frame = document.getElementById('frame').value;
+
+      const isElectric = engineType === 'electric';
+      
+      let efficiency, propEfficiency;
+      
+      if (isElectric) {
+        efficiency = 0.8;
+      } else {
+        efficiency = 0.75;
+      }
+      
+      if (propDiameter < 12) {
+        propEfficiency = 0.70;
+      } else if (propDiameter < 24) {
+        propEfficiency = 0.80;
+      } else {
+        propEfficiency = 0.88;
+      }
+      
+      const bsfc = engineType === '2stroke' ? 0.4 : 0.3;
+      const rho = 1.225;
+      const g = 9.81;
+
+      let flightTime, flightTimeFormula, flightTimeCalc;
+      
+      if (isElectric) {
+        flightTime = (battery * efficiency) / (power * 1000);
+        flightTimeFormula = `t = (E × η) / P`;
+        flightTimeCalc = `t = (${battery} Wh × ${efficiency}) / ${(power * 1000).toFixed(0)} W = ${flightTime.toFixed(2)} год`;
+      } else {
+        flightTime = (fuel * propEfficiency) / (power * bsfc);
+        flightTimeFormula = `t = (m_fuel × η_prop) / (P × BSFC)`;
+        flightTimeCalc = `t = (${fuel} кг × ${propEfficiency}) / (${power} кВт × ${bsfc}) = ${flightTime.toFixed(2)} год`;
+      }
+
+      const dragForce = 0.5 * rho * Math.pow(speed, 2) * area * cd;
+      const thrustFormula = `T = D = ½ × ρ × V² × S × Cd`;
+      const thrustCalc = `T = 0.5 × ${rho} × ${speed}² × ${area} × ${cd} = ${dragForce.toFixed(2)} Н`;
+
+      const pitchMeters = propPitch * 0.0254;
+      const slipFactor = 0.85;
+      const maxSpeed = (pitchMeters * rpm * slipFactor) / 60;
+      const speedFormula = `V_max = (Pitch_м × RPM × η) / 60`;
+      const speedCalc = `V_max = (${pitchMeters.toFixed(3)} м × ${rpm} × ${slipFactor}) / 60 = ${maxSpeed.toFixed(1)} м/с (${(maxSpeed * 3.6).toFixed(0)} км/год)`;
+
+      const totalWeight = weight + payload;
+      const totalWeightNewtons = totalWeight * g;
+      const thrustToWeight = dragForce / totalWeightNewtons;
+      const range = flightTime * speed * 3.6;
+      const diameterToPitch = propDiameter / propPitch;
+
+      let consumption, consumptionUnit;
+      if (isElectric) {
+        consumption = (power * 1000 * flightTime) / 1000;
+        consumptionUnit = 'кВт⋅год';
+      } else {
+        consumption = power * bsfc * flightTime;
+        consumptionUnit = 'кг';
+      }
+
+      const flightTimeStatus = flightTime >= 2 ? 'good' : flightTime >= 1 ? 'warning' : 'bad';
+      const thrustStatus = thrustToWeight >= 0.3 ? 'good' : thrustToWeight >= 0.15 ? 'warning' : 'bad';
+      const speedStatus = maxSpeed >= speed * 1.1 ? 'good' : maxSpeed >= speed * 0.9 ? 'warning' : 'bad';
+
+      const recommendations = [];
+      
+      if (flightTime < 2) {
+        if (isElectric) {
+          recommendations.push(`Час польоту ${flightTime.toFixed(1)} год недостатній. Збільште ємність батареї`);
+        } else {
+          recommendations.push(`Час польоту ${flightTime.toFixed(1)} год недостатній. Збільште запас палива`);
+        }
+      }
+      
+      if (thrustToWeight < 0.3) {
+        recommendations.push(`T/W = ${thrustToWeight.toFixed(2)} замале. Збільште пропелер або потужність`);
+      }
+      
+      if (maxSpeed < speed) {
+        recommendations.push(`Макс швидкість ${maxSpeed.toFixed(1)} м/с менша за крейсерську ${speed} м/с`);
+      }
+
+      displayResults({
+        flightTime, dragForce, maxSpeed, totalWeight, thrustToWeight, range,
+        consumption, consumptionUnit, diameterToPitch, propEfficiency,
+        flightTimeStatus, thrustStatus, speedStatus, isElectric,
+        power, battery, fuel, efficiency, bsfc, propDiameter, propPitch,
+        rpm, speed, area, cd, rho, g, totalWeightNewtons,
+        recommendations, engineType, uavType, frame,
+        flightTimeFormula, flightTimeCalc, thrustFormula, thrustCalc,
+        speedFormula, speedCalc
+      });
+    }
+
+    function getEngineName(type) {
+      const names = {
+        'electric': 'Електричний BLDC',
+        '2stroke': 'Бензиновий 2T',
+        '4stroke': 'Бензиновий 4T',
+        'turboprop': 'Турбогвинтовий'
+      };
+      return names[type] || type;
+    }
+
+    function displayResults(data) {
+      const html = `
+        <div class="section-title">Результати розрахунків</div>
+        
+        <div class="results-grid">
+          <div class="result-card">
+            <div class="result-label">⏱ Час польоту</div>
+            <div class="result-value">${data.flightTime.toFixed(2)}</div>
+            <div class="result-unit">годин</div>
+            <div class="result-status ${data.flightTimeStatus}">
+              ${data.flightTimeStatus === 'good' ? '✓ Відмінно' : 
+                data.flightTimeStatus === 'warning' ? '⚠ Прийнятно' : '✗ Недостатньо'}
+            </div>
+          </div>
+
+          <div class="result-card">
+            <div class="result-label">⚡ Тяга</div>
+            <div class="result-value">${data.dragForce.toFixed(2)}</div>
+            <div class="result-unit">Ньютон (Н)</div>
+            <div class="result-status ${data.thrustStatus}">
+              T/W: ${data.thrustToWeight.toFixed(3)}
+            </div>
+          </div>
+
+          <div class="result-card">
+            <div class="result-label">🚀 Макс швидкість</div>
+            <div class="result-value">${data.maxSpeed.toFixed(1)}</div>
+            <div class="result-unit">м/с (${(data.maxSpeed * 3.6).toFixed(0)} км/год)</div>
+            <div class="result-status ${data.speedStatus}">
+              ${data.speedStatus === 'good' ? '✓ Достатньо' : 
+                data.speedStatus === 'warning' ? '⚠ Граничне' : '✗ Недостатньо'}
+            </div>
+          </div>
+
+          <div class="result-card">
+            <div class="result-label">⚖️ Загальна маса</div>
+            <div class="result-value">${data.totalWeight.toFixed(1)}</div>
+            <div class="result-unit">кг (${data.totalWeightNewtons.toFixed(1)} Н)</div>
+          </div>
+
+          <div class="result-card">
+            <div class="result-label">🔧 Конфігурація</div>
+            <div class="result-value">${data.propDiameter}"</div>
+            <div class="result-unit">
+              ${data.uavType || 'БПЛА'}<br/>
+              ${getEngineName(data.engineType)}<br/>
+              ${data.power} кВт, ${data.rpm} RPM
+            </div>
+          </div>
+
+          <div class="result-card">
+            <div class="result-label">📏 Дальність</div>
+            <div class="result-value">${data.range.toFixed(0)}</div>
+            <div class="result-unit">км</div>
+          </div>
+        </div>
+
+        ${data.recommendations.length > 0 ? `
+          <div class="recommendations">
+            <div class="recommendations-title">💡 Рекомендації</div>
+            <ul class="recommendations-list">
+              ${data.recommendations.map(rec => `<li>${rec}</li>`).join('')}
+            </ul>
+          </div>
+        ` : ''}
+
+        <div style="margin-top: 24px;">
+          <div class="section-title">📐 Формули розрахунку</div>
+
+          <div class="formula-card">
+            <div class="formula-title">1️⃣ Час польоту</div>
+            <div class="formula">${data.flightTimeFormula}</div>
+            <div class="formula">${data.flightTimeCalc}</div>
+          </div>
+
+          <div class="formula-card">
+            <div class="formula-title">2️⃣ Тяга</div>
+            <div class="formula">${data.thrustFormula}</div>
+            <div class="formula">${data.thrustCalc}</div>
+          </div>
+
+          <div class="formula-card">
+            <div class="formula-title">3️⃣ Максимальна швидкість</div>
+            <div class="formula">${data.speedFormula}</div>
+            <div class="formula">${data.speedCalc}</div>
+          </div>
+        </div>
+      `;
+
+      document.getElementById('resultsContent').innerHTML = html;
+    }
+  </script>
 </body>
 </html>
