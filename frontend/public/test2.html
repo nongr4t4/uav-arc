@@ -8,7 +8,7 @@
       font-family: Arial, sans-serif;
       margin: 30px;
       max-width: 1000px;
-      background: #f4f4f4;
+      background: darkslateblue;
     }
     h1, h2, h3 {
       margin-bottom: 8px;
@@ -156,10 +156,10 @@
 
         if (!response.ok) {
           const text = await response.text();
-          resultBox.innerHTML =
+          resultBox.innerHTML = `
             <h2>❌ Помилка сервера (${response.status})</h2>
             <pre class="small">${text}</pre>
-          ;
+          `;
           btn.disabled = false;
           return;
         }
@@ -167,10 +167,10 @@
         const json = await response.json();
         renderResult(json, data);
       } catch (err) {
-        resultBox.innerHTML =
+        resultBox.innerHTML = `
           <h2>❌ Помилка запиту</h2>
           <p class="small">${err}</p>
-        ;
+        `;
       } finally {
         btn.disabled = false;
       }
@@ -190,12 +190,11 @@
 
       const meetsRadius = mission.meetsRadius;
       const meetsRadiusPill = meetsRadius
-        ? <span class="pill-ok">радіус досяжний</span>
-        : <span class="pill-bad">радіус не досягається</span>
-      ;
+        ? `<span class="pill-ok">радіус досяжний</span>`
+        : `<span class="pill-bad">радіус не досягається</span>`;
 
       // Блок 1 — Вихідні дані
-      const blockInput =
+      const blockInput = `
         <div class="section">
           <h2>1. Вхідні вимоги місії</h2>
           <p><span class="label">Час польоту:</span> ${input.timeHours} год</p>
@@ -204,10 +203,10 @@
           <p><span class="label">Вимога до шуму:</span> ${input.lowNoise ? "Низький" : "Може бути підвищений"}</p>
           <p><span class="label">Бюджет:</span> $${input.budget}</p>
         </div>
-      ;
+      `;
 
       // Блок 2 — Характеристики ГМГ
-      const blockGmg =
+      const blockGmg = `
         <div class="section">
           <h2>2. Розраховані характеристики ГМГ</h2>
           <p><span class="label">Клас місії:</span> ${humanMission(mission.missionType)}</p>
@@ -224,10 +223,10 @@
           <p><span class="label">Маса палива / батареї:</span> ${calc.fuelOrBattery_kg} кг</p>
           <p><span class="label">Злітна маса (MTOW):</span> ${calc.mtow_kg} кг</p>
         </div>
-      ;
+      `;
 
       // Блок 3 — Обґрунтування вибору ГМГ (як твої приклади)
-      const blockJustification =
+      const blockJustification = `
         <div class="section">
           <h2>3. Обґрунтування вибору ГМГ</h2>
           <p>
@@ -252,10 +251,10 @@
             ), але для даних вимог це не є обов'язковим.
           </p>
         </div>
-      ;
+      `;
 
       // Блок 4 — Таблиця рекомендованих компонентів
-      const blockComponents =
+      const blockComponents = `
         <div class="section">
           <h2>4. Рекомендовані компоненти ГМГ (у межах бюджету)</h2>
           <table>
@@ -293,25 +292,19 @@
             Таблиця показує орієнтовний рівень витрат на ГМГ у структурі загального бюджету $${input.budget}.
           </p>
         </div>
-      ;
+      `;
 
       // Блок 5 — Інженерний висновок AI
-      const blockAI =
+      const blockAI = `
         <div class="section">
           <h2>5. Інженерний висновок (Gemini)</h2>
           <div style="background:#fafafa; padding:10px 12px; border-radius:8px; border:1px solid #eee;">
             ${aiText}
           </div>
         </div>
-      ;
+      `;
 
-      resultBox.innerHTML =
-        ${blockInput}
-        ${blockGmg}
-        ${blockJustification}
-        ${blockComponents}
-        ${blockAI}
-      ;
+      resultBox.innerHTML = `${blockInput}${blockGmg}${blockJustification}${blockComponents}${blockAI}`;
     }
   </script>
 </body>
