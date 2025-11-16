@@ -1,0 +1,1004 @@
+<!DOCTYPE html>
+<html lang="uk">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>UAV Mission Configurator - Розрахунок ГМГ</title>
+  <link rel="icon" type="image/x-icon" href="drone.ico">
+  <style>
+    :root {
+      --bg-main: #121214;
+      --bg-panel: #19171a;
+      --bg-header: #1f1c20;
+      --accent: #46e0c3;
+      --accent-soft: rgba(70, 224, 195, 0.12);
+      --text-main: #f4f4f4;
+      --text-muted: #b0adb4;
+      --danger: #ff6b81;
+      --border-subtle: #2a272c;
+      --radius-lg: 16px;
+    }
+
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+    }
+
+    body {
+      font-family: system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+      background: radial-gradient(circle at top, #26232b 0, #08070a 50%, #050507);
+      color: var(--text-main);
+      min-height: 100vh;
+      padding: 24px;
+    }
+
+    .container {
+      max-width: 1600px;
+      margin: 0 auto;
+    }
+
+    /* HEADER */
+    header {
+      background: var(--bg-header);
+      border-radius: 20px;
+      border: 1px solid var(--border-subtle);
+      padding: 20px 40px;
+      margin-bottom: 24px;
+      position: relative;
+      overflow: hidden;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+    }
+
+    header::before {
+      content: "";
+      position: absolute;
+      inset: -40%;
+      background: radial-gradient(circle at 15% 0, rgba(70, 224, 195, 0.17), transparent 55%),
+        radial-gradient(circle at 90% 0, rgba(130, 255, 220, 0.12), transparent 60%);
+      opacity: 0.8;
+      pointer-events: none;
+    }
+
+    .header-left,
+    .header-right {
+      position: relative;
+      z-index: 1;
+      display: flex;
+      align-items: center;
+      gap: 18px;
+    }
+
+    .header-content {
+      display: flex;
+      align-items: center;
+      gap: 18px;
+      text-decoration: none;
+      color: inherit;
+    }
+
+    .logo-circle {
+      width: 60px;
+      height: 60px;
+      border-radius: 50%;
+      border: 2px solid var(--accent);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      overflow: hidden;
+    }
+
+    .logo-circle img {
+      width: 100%;
+      height: 100%;
+      object-fit: cover;
+      border-radius: 50%;
+    }
+
+    .brand-block {
+      display: flex;
+      flex-direction: column;
+      line-height: 1.2;
+    }
+
+    .brand-title {
+      font-size: 16px;
+      letter-spacing: 0.16em;
+      text-transform: uppercase;
+      color: var(--accent);
+    }
+
+    .brand-sub {
+      font-size: 11px;
+      color: var(--text-muted);
+    }
+
+    nav {
+      display: flex;
+      gap: 28px;
+      font-size: 13px;
+    }
+
+    nav a {
+      color: var(--text-muted);
+      text-decoration: none;
+      position: relative;
+      padding-bottom: 3px;
+    }
+
+    nav a::after {
+      content: "";
+      position: absolute;
+      left: 0;
+      bottom: 0;
+      width: 0;
+      height: 1px;
+      background: var(--accent);
+      transition: width 0.2s ease-out;
+    }
+
+    nav a:hover {
+      color: var(--text-main);
+    }
+
+    nav a:hover::after {
+      width: 100%;
+    }
+
+    .pill-beta {
+      position: relative;
+      z-index: 1;
+      font-size: 10px;
+      border-radius: 999px;
+      border: 1px solid rgba(255, 255, 255, 0.16);
+      padding: 4px 12px;
+      text-transform: uppercase;
+      letter-spacing: 0.12em;
+      color: var(--text-muted);
+    }
+
+    /* MAIN GRID */
+    .main-grid {
+      display: grid;
+      grid-template-columns: 420px 1fr;
+      gap: 24px;
+      align-items: start;
+    }
+
+    .sidebar {
+      position: sticky;
+      top: 20px;
+    }
+
+    .panel {
+      background: var(--bg-panel);
+      border-radius: 20px;
+      border: 1px solid var(--border-subtle);
+      padding: 28px;
+      position: relative;
+      overflow: hidden;
+      margin-bottom: 20px;
+    }
+
+    .panel::before {
+      content: "";
+      position: absolute;
+      inset: 0;
+      background-image: linear-gradient(rgba(255, 255, 255, 0.02) 1px, transparent 1px),
+        linear-gradient(90deg, rgba(255, 255, 255, 0.02) 1px, transparent 1px);
+      background-size: 26px 26px;
+      opacity: 0.4;
+      pointer-events: none;
+    }
+
+    .panel-content {
+      position: relative;
+      z-index: 1;
+    }
+
+    .section-title {
+      font-size: 13px;
+      text-transform: uppercase;
+      letter-spacing: 0.12em;
+      color: var(--accent);
+      margin-bottom: 20px;
+      margin-top: 12px;
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      position: relative;
+      padding-bottom: 12px;
+    }
+
+    .section-title::before {
+      content: "";
+      width: 4px;
+      height: 20px;
+      background: linear-gradient(180deg, var(--accent), rgba(70, 224, 195, 0.3));
+      border-radius: 2px;
+      box-shadow: 0 0 8px rgba(70, 224, 195, 0.5);
+    }
+
+    .section-title::after {
+      content: "";
+      position: absolute;
+      bottom: 0;
+      left: 0;
+      right: 0;
+      height: 1px;
+      background: linear-gradient(90deg, var(--accent), transparent);
+      opacity: 0.5;
+    }
+
+    .form-group {
+      margin-bottom: 18px;
+    }
+
+    .form-label {
+      display: block;
+      font-size: 11px;
+      text-transform: uppercase;
+      letter-spacing: 0.1em;
+      color: var(--text-muted);
+      margin-bottom: 8px;
+    }
+
+    .form-select, .form-input {
+      width: 100%;
+      background: rgba(0, 0, 0, 0.4);
+      border: 1px solid var(--border-subtle);
+      border-radius: 12px;
+      padding: 12px 14px;
+      color: var(--text-main);
+      font-size: 14px;
+      font-family: inherit;
+      transition: all 0.2s ease;
+    }
+
+    .form-select:focus, .form-input:focus {
+      outline: none;
+      border-color: var(--accent);
+      background: rgba(70, 224, 195, 0.08);
+      box-shadow: 0 0 0 3px rgba(70, 224, 195, 0.1);
+    }
+
+    .form-select:hover, .form-input:hover {
+      border-color: var(--accent);
+    }
+
+    .form-input::-webkit-outer-spin-button,
+    .form-input::-webkit-inner-spin-button {
+      -webkit-appearance: none;
+      margin: 0;
+    }
+
+    .form-input[type=number] {
+      -moz-appearance: textfield;
+    }
+
+    .preset-buttons {
+      display: grid;
+      grid-template-columns: 1fr 1fr 1fr;
+      gap: 10px;
+      margin-bottom: 24px;
+    }
+
+    .preset-btn {
+      background: linear-gradient(135deg, rgba(0, 0, 0, 0.6), rgba(0, 0, 0, 0.4));
+      border: 1px solid var(--border-subtle);
+      border-radius: 12px;
+      padding: 16px 12px;
+      color: var(--text-muted);
+      font-size: 11px;
+      cursor: pointer;
+      transition: all 0.3s ease;
+      text-align: center;
+      font-weight: 600;
+      position: relative;
+      overflow: hidden;
+    }
+
+    .preset-btn:hover {
+      border-color: var(--accent);
+      color: var(--text-main);
+      background: linear-gradient(135deg, rgba(70, 224, 195, 0.08), rgba(0, 0, 0, 0.5));
+      transform: translateY(-2px);
+    }
+
+    .preset-btn.active {
+      background: linear-gradient(135deg, var(--accent-soft), rgba(70, 224, 195, 0.15));
+      border-color: var(--accent);
+      color: var(--accent);
+      box-shadow: 0 0 20px rgba(70, 224, 195, 0.4);
+    }
+
+    .btn-calculate {
+      width: 100%;
+      background: linear-gradient(135deg, var(--accent), #3bc9ad);
+      color: #020203;
+      border: none;
+      border-radius: 999px;
+      padding: 14px 24px;
+      font-size: 13px;
+      font-weight: 700;
+      cursor: pointer;
+      transition: all 0.3s ease;
+      text-transform: uppercase;
+      letter-spacing: 0.15em;
+      box-shadow: 0 4px 20px rgba(70, 224, 195, 0.4);
+      margin-top: 24px;
+    }
+
+    .btn-calculate:hover {
+      transform: translateY(-2px);
+      box-shadow: 0 6px 30px rgba(70, 224, 195, 0.6);
+    }
+
+    /* RESULTS */
+    .results-grid {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 16px;
+      margin-bottom: 24px;
+    }
+
+    .result-card {
+      background: rgba(0, 0, 0, 0.4);
+      border: 1px solid var(--border-subtle);
+      border-radius: 16px;
+      padding: 20px;
+    }
+
+    .result-label {
+      font-size: 11px;
+      text-transform: uppercase;
+      letter-spacing: 0.12em;
+      color: var(--text-muted);
+      margin-bottom: 8px;
+    }
+
+    .result-value {
+      font-size: 32px;
+      color: var(--accent);
+      font-weight: 600;
+      line-height: 1;
+      margin-bottom: 6px;
+    }
+
+    .result-unit {
+      font-size: 12px;
+      color: var(--text-muted);
+      line-height: 1.4;
+    }
+
+    .result-status {
+      margin-top: 12px;
+      padding: 6px 12px;
+      border-radius: 8px;
+      font-size: 11px;
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+    }
+
+    .result-status.good {
+      background: rgba(74, 222, 128, 0.15);
+      color: #4ade80;
+    }
+
+    .result-status.warning {
+      background: rgba(251, 191, 36, 0.15);
+      color: #fbbf24;
+    }
+
+    .result-status.bad {
+      background: rgba(255, 107, 129, 0.15);
+      color: var(--danger);
+    }
+
+    .formula-card {
+      background: rgba(0, 0, 0, 0.5);
+      border: 1px solid var(--border-subtle);
+      border-radius: 16px;
+      padding: 20px;
+      margin-bottom: 16px;
+    }
+
+    .formula-title {
+      font-size: 12px;
+      color: var(--accent);
+      margin-bottom: 12px;
+      text-transform: uppercase;
+      letter-spacing: 0.1em;
+    }
+
+    .formula {
+      font-family: 'Courier New', monospace;
+      font-size: 13px;
+      color: var(--text-main);
+      background: rgba(0, 0, 0, 0.6);
+      padding: 12px 16px;
+      border-radius: 8px;
+      margin-bottom: 10px;
+      overflow-x: auto;
+      line-height: 1.6;
+    }
+
+    .formula-desc {
+      font-size: 12px;
+      color: var(--text-muted);
+      line-height: 1.6;
+    }
+
+    .recommendations {
+      background: var(--accent-soft);
+      border: 1px solid var(--accent);
+      border-radius: 16px;
+      padding: 20px;
+      margin-top: 20px;
+    }
+
+    .recommendations-title {
+      font-size: 13px;
+      color: var(--accent);
+      margin-bottom: 12px;
+      font-weight: 600;
+    }
+
+    .recommendations-list {
+      font-size: 12px;
+      color: var(--text-main);
+      line-height: 1.8;
+      list-style: none;
+    }
+
+    .recommendations-list li {
+      margin-bottom: 8px;
+      padding-left: 20px;
+      position: relative;
+    }
+
+    .recommendations-list li::before {
+      content: "→";
+      position: absolute;
+      left: 0;
+      color: var(--accent);
+    }
+
+    .empty-state {
+      text-align: center;
+      padding: 80px 20px;
+      color: var(--text-muted);
+    }
+
+    .empty-icon {
+      font-size: 48px;
+      margin-bottom: 16px;
+      opacity: 0.3;
+    }
+
+    @media (max-width: 1200px) {
+      .main-grid {
+        grid-template-columns: 1fr;
+      }
+      .sidebar {
+        position: static;
+      }
+      .results-grid {
+        grid-template-columns: repeat(2, 1fr);
+      }
+    }
+
+    @media (max-width: 640px) {
+      body {
+        padding: 12px;
+      }
+      
+      header {
+        flex-direction: column;
+        align-items: flex-start;
+        gap: 12px;
+        padding: 16px 24px;
+      }
+      
+      .header-right {
+        width: 100%;
+        justify-content: space-between;
+      }
+      
+      nav {
+        gap: 16px;
+        font-size: 12px;
+      }
+      
+      .results-grid {
+        grid-template-columns: 1fr;
+      }
+      .preset-buttons {
+        grid-template-columns: 1fr;
+      }
+      
+      .brand-title {
+        font-size: 13px;
+      }
+      
+      .brand-sub {
+        font-size: 10px;
+      }
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <header>
+      <div class="header-left">
+        <a href="#" class="header-content">
+          <div class="logo-circle">
+            <img src="drone.png" alt="UAV">
+          </div>
+          <div class="brand-block">
+            <div class="brand-title">Конфігуратор ГМГ БПЛА</div>
+            <div class="brand-sub">by EXPLOITCREW · Інженерний калькулятор</div>
+          </div>
+        </a>
+      </div>
+      
+      <div class="header-right">
+        <nav>
+          <a href="uav-configurator.html">Configurate</a>
+          <a href="praktychne-zavdannia-scenarii.html">Scenarios</a>
+          <a href="#docs">Docs</a>
+          <a href="#about">About</a>
+        </nav>
+        <div class="pill-beta">Prototype</div>
+      </div>
+    </header>
+
+    <div class="main-grid">
+      <!-- SIDEBAR -->
+      <div class="sidebar">
+        <div class="panel">
+          <div class="panel-content">
+            <div class="section-title">Готові пресети</div>
+            
+            <div class="preset-buttons">
+              <button class="preset-btn" data-preset="tactical">Тактичний<br/><small style="opacity:0.7;">DJI Mavic 3</small></button>
+              <button class="preset-btn" data-preset="operational">Оперативний<br/><small style="opacity:0.7;">Bayraktar TB2</small></button>
+              <button class="preset-btn" data-preset="kamikaze">Камікадзе<br/><small style="opacity:0.7;">Shahed-136</small></button>
+            </div>
+
+            <div class="section-title">Двигун</div>
+            
+            <div class="form-group">
+              <label class="form-label">Тип двигуна</label>
+              <select class="form-select" id="engineType">
+                <option value="electric">Електричний BLDC</option>
+                <option value="2stroke">Бензиновий 2T</option>
+                <option value="4stroke">Бензиновий 4T (Rotax)</option>
+                <option value="turboprop">Турбогвинтовий</option>
+              </select>
+            </div>
+
+            <div class="form-group">
+              <label class="form-label">Потужність (кВт)</label>
+              <input type="number" class="form-input" id="power" value="5" min="0.1" max="200" step="0.1">
+            </div>
+
+            <div class="form-group" id="batteryGroup">
+              <label class="form-label">Ємність батареї (Wh)</label>
+              <input type="number" class="form-input" id="battery" value="200" min="10" max="10000" step="1">
+            </div>
+
+            <div class="form-group" id="fuelGroup" style="display:none;">
+              <label class="form-label">Запас палива (кг)</label>
+              <input type="number" class="form-input" id="fuel" value="15" min="0.5" max="1000" step="0.5">
+            </div>
+
+            <div class="section-title">Пропелер</div>
+
+            <div class="form-group">
+              <label class="form-label">Діаметр (дюйми)</label>
+              <input type="number" class="form-input" id="propDiameter" value="28" min="4" max="200" step="0.1">
+            </div>
+
+            <div class="form-group">
+              <label class="form-label">Крок (дюйми)</label>
+              <input type="number" class="form-input" id="propPitch" value="18" min="2" max="100" step="0.5">
+            </div>
+
+            <div class="form-group">
+              <label class="form-label">Оберти (RPM)</label>
+              <input type="number" class="form-input" id="rpm" value="6000" min="500" max="15000" step="100">
+            </div>
+
+            <div class="section-title">Параметри БПЛА</div>
+
+            <div class="form-group">
+              <label class="form-label">Тип БПЛА</label>
+              <select class="form-select" id="uavType">
+                <option value="">Оберіть тип...</option>
+                <option value="Квадрокоптер">Квадрокоптер</option>
+                <option value="Гексакоптер">Гексакоптер</option>
+                <option value="Октокоптер">Октокоптер</option>
+                <option value="Літак">Літак</option>
+                <option value="Літак MALE">Літак MALE</option>
+                <option value="Літаюче крило">Літаюче крило (Delta)</option>
+                <option value="Конвертоплан">Конвертоплан (VTOL)</option>
+                <option value="FPV дрон">FPV дрон</option>
+              </select>
+            </div>
+
+            <div class="form-group">
+              <label class="form-label">Тип каркасу</label>
+              <select class="form-select" id="frame">
+                <option value="">Оберіть каркас...</option>
+                <option value="Карбоновий X-frame">🔷 Карбоновий X-frame (легкий, жорсткий)</option>
+                <option value="Алюмінієвий H-frame">🔶 Алюмінієвий H-frame (міцний, важкий вантаж)</option>
+                <option value="Композитний монокок">✈️ Композитний монокок (літак, низький Cd)</option>
+                <option value="Delta EPP + карбон">🎯 Delta wing EPP + карбон (одноразовий)</option>
+                <option value="Складаний композит">📦 Складаний композитний фюзеляж (транспорт)</option>
+                <option value="Трубчастий алюміній">⚙️ Трубчастий алюмінієвий (бюджетний)</option>
+              </select>
+            </div>
+
+            <div class="form-group">
+              <label class="form-label">Маса БПЛА (кг)</label>
+              <input type="number" class="form-input" id="weight" value="50" min="0.1" max="5000" step="0.1">
+            </div>
+
+            <div class="form-group">
+              <label class="form-label">Навантаження (кг)</label>
+              <input type="number" class="form-input" id="payload" value="40" min="0" max="2000" step="0.1">
+            </div>
+
+            <div class="form-group">
+              <label class="form-label">Швидкість (м/с)</label>
+              <input type="number" class="form-input" id="speed" value="55" min="5" max="300" step="1">
+            </div>
+
+            <div class="form-group">
+              <label class="form-label">Площа (м²)</label>
+              <input type="number" class="form-input" id="area" value="0.8" min="0.01" max="50" step="0.01">
+            </div>
+
+            <div class="form-group">
+              <label class="form-label">Коефіцієнт опору (Cd)</label>
+              <input type="number" class="form-input" id="cd" value="0.06" min="0.01" max="2" step="0.001">
+            </div>
+
+            <button class="btn-calculate" id="calculateBtn">🚁 Розрахувати ГМГ</button>
+          </div>
+        </div>
+      </div>
+
+      <!-- RESULTS -->
+      <div class="results-area">
+        <div class="panel">
+          <div class="panel-content" id="resultsContent">
+            <div class="empty-state">
+              <div class="empty-icon">📊</div>
+              <h3>Налаштуйте параметри та натисніть "Розрахувати"</h3>
+              <p style="margin-top: 12px;">Або оберіть один з готових пресетів</p>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    const presets = {
+      tactical: {
+        name: 'DJI Mavic 3',
+        uavType: 'Квадрокоптер',
+        frame: 'Карбоновий X-frame',
+        engineType: 'electric',
+        power: 0.4,
+        battery: 200,
+        propDiameter: 9.4,
+        propPitch: 4.5,
+        rpm: 5000,
+        weight: 3,
+        payload: 2,
+        speed: 15,
+        area: 0.15,
+        cd: 0.35
+      },
+      operational: {
+        name: 'Bayraktar TB2',
+        uavType: 'Літак MALE',
+        frame: 'Композитний монокок, 12м',
+        engineType: '4stroke',
+        power: 74.6,
+        fuel: 80,
+        propDiameter: 70,
+        propPitch: 44,
+        rpm: 2400,
+        weight: 191,
+        payload: 50,
+        speed: 38,
+        area: 2.0,
+        cd: 0.035
+      },
+      kamikaze: {
+        name: 'Shahed-136',
+        uavType: 'Літаюче крило',
+        frame: 'Delta EPP + карбон',
+        engineType: '2stroke',
+        power: 6.2,
+        fuel: 11.4,
+        propDiameter: 23,
+        propPitch: 15,
+        rpm: 6800,
+        weight: 18.7,
+        payload: 40,
+        speed: 68,
+        area: 0.52,
+        cd: 0.048
+      }
+    };
+
+    document.getElementById('engineType').addEventListener('change', (e) => {
+      const isElectric = e.target.value === 'electric';
+      document.getElementById('batteryGroup').style.display = isElectric ? 'block' : 'none';
+      document.getElementById('fuelGroup').style.display = isElectric ? 'none' : 'block';
+    });
+
+    document.querySelectorAll('.preset-btn').forEach(btn => {
+      btn.addEventListener('click', function() {
+        document.querySelectorAll('.preset-btn').forEach(b => b.classList.remove('active'));
+        this.classList.add('active');
+        
+        const preset = presets[this.dataset.preset];
+        loadPreset(preset);
+        calculate();
+      });
+    });
+
+    function loadPreset(preset) {
+      document.getElementById('engineType').value = preset.engineType;
+      document.getElementById('engineType').dispatchEvent(new Event('change'));
+      
+      document.getElementById('power').value = preset.power;
+      
+      if (preset.battery) {
+        document.getElementById('battery').value = preset.battery;
+      }
+      if (preset.fuel) {
+        document.getElementById('fuel').value = preset.fuel;
+      }
+      
+      document.getElementById('propDiameter').value = preset.propDiameter;
+      document.getElementById('propPitch').value = preset.propPitch;
+      document.getElementById('rpm').value = preset.rpm;
+      document.getElementById('weight').value = preset.weight;
+      document.getElementById('payload').value = preset.payload;
+      document.getElementById('speed').value = preset.speed;
+      document.getElementById('area').value = preset.area;
+      document.getElementById('cd').value = preset.cd;
+      
+      if (preset.uavType) {
+        document.getElementById('uavType').value = preset.uavType;
+      }
+      if (preset.frame) {
+        document.getElementById('frame').value = preset.frame;
+      }
+    }
+
+    document.getElementById('calculateBtn').addEventListener('click', calculate);
+
+    function calculate() {
+      const engineType = document.getElementById('engineType').value;
+      const power = parseFloat(document.getElementById('power').value);
+      const battery = parseFloat(document.getElementById('battery').value);
+      const fuel = parseFloat(document.getElementById('fuel').value);
+      const propDiameter = parseFloat(document.getElementById('propDiameter').value);
+      const propPitch = parseFloat(document.getElementById('propPitch').value);
+      const rpm = parseFloat(document.getElementById('rpm').value);
+      const weight = parseFloat(document.getElementById('weight').value);
+      const payload = parseFloat(document.getElementById('payload').value);
+      const speed = parseFloat(document.getElementById('speed').value);
+      const area = parseFloat(document.getElementById('area').value);
+      const cd = parseFloat(document.getElementById('cd').value);
+      const uavType = document.getElementById('uavType').value;
+      const frame = document.getElementById('frame').value;
+
+      const isElectric = engineType === 'electric';
+      
+      let efficiency, propEfficiency;
+      
+      if (isElectric) {
+        efficiency = 0.8;
+      } else {
+        efficiency = 0.75;
+      }
+      
+      if (propDiameter < 12) {
+        propEfficiency = 0.70;
+      } else if (propDiameter < 24) {
+        propEfficiency = 0.80;
+      } else {
+        propEfficiency = 0.88;
+      }
+      
+      const bsfc = engineType === '2stroke' ? 0.4 : 0.3;
+      const rho = 1.225;
+      const g = 9.81;
+
+      let flightTime, flightTimeFormula, flightTimeCalc;
+      
+      if (isElectric) {
+        flightTime = (battery * efficiency) / (power * 1000);
+        flightTimeFormula = `t = (E × η) / P`;
+        flightTimeCalc = `t = (${battery} Wh × ${efficiency}) / ${(power * 1000).toFixed(0)} W = ${flightTime.toFixed(2)} год`;
+      } else {
+        flightTime = (fuel * propEfficiency) / (power * bsfc);
+        flightTimeFormula = `t = (m_fuel × η_prop) / (P × BSFC)`;
+        flightTimeCalc = `t = (${fuel} кг × ${propEfficiency}) / (${power} кВт × ${bsfc}) = ${flightTime.toFixed(2)} год`;
+      }
+
+      const dragForce = 0.5 * rho * Math.pow(speed, 2) * area * cd;
+      const thrustFormula = `T = D = ½ × ρ × V² × S × Cd`;
+      const thrustCalc = `T = 0.5 × ${rho} × ${speed}² × ${area} × ${cd} = ${dragForce.toFixed(2)} Н`;
+
+      const pitchMeters = propPitch * 0.0254;
+      const slipFactor = 0.85;
+      const maxSpeed = (pitchMeters * rpm * slipFactor) / 60;
+      const speedFormula = `V_max = (Pitch_м × RPM × η) / 60`;
+      const speedCalc = `V_max = (${pitchMeters.toFixed(3)} м × ${rpm} × ${slipFactor}) / 60 = ${maxSpeed.toFixed(1)} м/с (${(maxSpeed * 3.6).toFixed(0)} км/год)`;
+
+      const totalWeight = weight + payload;
+      const totalWeightNewtons = totalWeight * g;
+      const thrustToWeight = dragForce / totalWeightNewtons;
+      const range = flightTime * speed * 3.6;
+      const diameterToPitch = propDiameter / propPitch;
+
+      let consumption, consumptionUnit;
+      if (isElectric) {
+        consumption = (power * 1000 * flightTime) / 1000;
+        consumptionUnit = 'кВт⋅год';
+      } else {
+        consumption = power * bsfc * flightTime;
+        consumptionUnit = 'кг';
+      }
+
+      const flightTimeStatus = flightTime >= 2 ? 'good' : flightTime >= 1 ? 'warning' : 'bad';
+      const thrustStatus = thrustToWeight >= 0.3 ? 'good' : thrustToWeight >= 0.15 ? 'warning' : 'bad';
+      const speedStatus = maxSpeed >= speed * 1.1 ? 'good' : maxSpeed >= speed * 0.9 ? 'warning' : 'bad';
+
+      const recommendations = [];
+      
+      if (flightTime < 2) {
+        if (isElectric) {
+          recommendations.push(`Час польоту ${flightTime.toFixed(1)} год недостатній. Збільште ємність батареї`);
+        } else {
+          recommendations.push(`Час польоту ${flightTime.toFixed(1)} год недостатній. Збільште запас палива`);
+        }
+      }
+      
+      if (thrustToWeight < 0.3) {
+        recommendations.push(`T/W = ${thrustToWeight.toFixed(2)} замале. Збільште пропелер або потужність`);
+      }
+      
+      if (maxSpeed < speed) {
+        recommendations.push(`Макс швидкість ${maxSpeed.toFixed(1)} м/с менша за крейсерську ${speed} м/с`);
+      }
+
+      displayResults({
+        flightTime, dragForce, maxSpeed, totalWeight, thrustToWeight, range,
+        consumption, consumptionUnit, diameterToPitch, propEfficiency,
+        flightTimeStatus, thrustStatus, speedStatus, isElectric,
+        power, battery, fuel, efficiency, bsfc, propDiameter, propPitch,
+        rpm, speed, area, cd, rho, g, totalWeightNewtons,
+        recommendations, engineType, uavType, frame,
+        flightTimeFormula, flightTimeCalc, thrustFormula, thrustCalc,
+        speedFormula, speedCalc
+      });
+    }
+
+    function getEngineName(type) {
+      const names = {
+        'electric': 'Електричний BLDC',
+        '2stroke': 'Бензиновий 2T',
+        '4stroke': 'Бензиновий 4T',
+        'turboprop': 'Турбогвинтовий'
+      };
+      return names[type] || type;
+    }
+
+    function displayResults(data) {
+      const html = `
+        <div class="section-title">Результати розрахунків</div>
+        
+        <div class="results-grid">
+          <div class="result-card">
+            <div class="result-label">⏱ Час польоту</div>
+            <div class="result-value">${data.flightTime.toFixed(2)}</div>
+            <div class="result-unit">годин</div>
+            <div class="result-status ${data.flightTimeStatus}">
+              ${data.flightTimeStatus === 'good' ? '✓ Відмінно' : 
+                data.flightTimeStatus === 'warning' ? '⚠ Прийнятно' : '✗ Недостатньо'}
+            </div>
+          </div>
+
+          <div class="result-card">
+            <div class="result-label">⚡ Тяга</div>
+            <div class="result-value">${data.dragForce.toFixed(2)}</div>
+            <div class="result-unit">Ньютон (Н)</div>
+            <div class="result-status ${data.thrustStatus}">
+              T/W: ${data.thrustToWeight.toFixed(3)}
+            </div>
+          </div>
+
+          <div class="result-card">
+            <div class="result-label">🚀 Макс швидкість</div>
+            <div class="result-value">${data.maxSpeed.toFixed(1)}</div>
+            <div class="result-unit">м/с (${(data.maxSpeed * 3.6).toFixed(0)} км/год)</div>
+            <div class="result-status ${data.speedStatus}">
+              ${data.speedStatus === 'good' ? '✓ Достатньо' : 
+                data.speedStatus === 'warning' ? '⚠ Граничне' : '✗ Недостатньо'}
+            </div>
+          </div>
+
+          <div class="result-card">
+            <div class="result-label">⚖️ Загальна маса</div>
+            <div class="result-value">${data.totalWeight.toFixed(1)}</div>
+            <div class="result-unit">кг (${data.totalWeightNewtons.toFixed(1)} Н)</div>
+          </div>
+
+          <div class="result-card">
+            <div class="result-label">🔧 Конфігурація</div>
+            <div class="result-value">${data.propDiameter}"</div>
+            <div class="result-unit">
+              ${data.uavType || 'БПЛА'}<br/>
+              ${getEngineName(data.engineType)}<br/>
+              ${data.power} кВт, ${data.rpm} RPM
+            </div>
+          </div>
+
+          <div class="result-card">
+            <div class="result-label">📏 Дальність</div>
+            <div class="result-value">${data.range.toFixed(0)}</div>
+            <div class="result-unit">км</div>
+          </div>
+        </div>
+
+        ${data.recommendations.length > 0 ? `
+          <div class="recommendations">
+            <div class="recommendations-title">💡 Рекомендації</div>
+            <ul class="recommendations-list">
+              ${data.recommendations.map(rec => `<li>${rec}</li>`).join('')}
+            </ul>
+          </div>
+        ` : ''}
+
+        <div style="margin-top: 24px;">
+          <div class="section-title">📐 Формули розрахунку</div>
+
+          <div class="formula-card">
+            <div class="formula-title">1️⃣ Час польоту</div>
+            <div class="formula">${data.flightTimeFormula}</div>
+            <div class="formula">${data.flightTimeCalc}</div>
+          </div>
+
+          <div class="formula-card">
+            <div class="formula-title">2️⃣ Тяга</div>
+            <div class="formula">${data.thrustFormula}</div>
+            <div class="formula">${data.thrustCalc}</div>
+          </div>
+
+          <div class="formula-card">
+            <div class="formula-title">3️⃣ Максимальна швидкість</div>
+            <div class="formula">${data.speedFormula}</div>
+            <div class="formula">${data.speedCalc}</div>
+          </div>
+        </div>
+      `;
+
+      document.getElementById('resultsContent').innerHTML = html;
+    }
+  </script>
+</body>
+</html>

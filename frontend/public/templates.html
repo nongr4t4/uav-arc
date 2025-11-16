@@ -1,0 +1,783 @@
+<!DOCTYPE html>
+<html lang="uk">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Практичне завдання - Розрахунок ГМГ для 3 сценаріїв</title>
+  <style>
+    :root {
+      --bg-main: #121214;
+      --bg-panel: #19171a;
+      --bg-header: #1f1c20;
+      --accent: #46e0c3;
+      --accent-soft: rgba(70, 224, 195, 0.12);
+      --text-main: #f4f4f4;
+      --text-muted: #b0adb4;
+      --danger: #ff6b81;
+      --warning: #fbbf24;
+      --success: #4ade80;
+      --border-subtle: #2a272c;
+      --radius-lg: 16px;
+    }
+
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+    }
+
+    body {
+      font-family: system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+      background: radial-gradient(circle at top, #26232b 0, #08070a 50%, #050507);
+      color: var(--text-main);
+      min-height: 100vh;
+      padding: 40px 20px;
+    }
+
+    .container {
+      max-width: 1600px;
+      margin: 0 auto;
+    }
+
+    .header {
+      background: var(--bg-header);
+      border-radius: 20px;
+      border: 1px solid var(--border-subtle);
+      padding: 32px 40px;
+      margin-bottom: 32px;
+      position: relative;
+      overflow: hidden;
+    }
+
+    .header::before {
+      content: "";
+      position: absolute;
+      inset: -40%;
+      background: radial-gradient(circle at 15% 0, rgba(70, 224, 195, 0.17), transparent 55%),
+        radial-gradient(circle at 90% 0, rgba(130, 255, 220, 0.12), transparent 60%);
+      opacity: 0.8;
+      pointer-events: none;
+    }
+
+    .header-content {
+      position: relative;
+      z-index: 1;
+    }
+
+    .header h1 {
+      font-size: 32px;
+      margin-bottom: 8px;
+      color: var(--accent);
+      letter-spacing: 0.08em;
+    }
+
+    .header p {
+      color: var(--text-muted);
+      font-size: 13px;
+      margin-top: 8px;
+    }
+
+    .scenarios-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(500px, 1fr));
+      gap: 24px;
+      margin-bottom: 40px;
+    }
+
+    .scenario-card {
+      background: var(--bg-panel);
+      border-radius: 20px;
+      border: 1px solid var(--border-subtle);
+      padding: 28px;
+      position: relative;
+      overflow: hidden;
+    }
+
+    .scenario-card::before {
+      content: "";
+      position: absolute;
+      inset: 0;
+      background-image: linear-gradient(rgba(255, 255, 255, 0.02) 1px, transparent 1px),
+        linear-gradient(90deg, rgba(255, 255, 255, 0.02) 1px, transparent 1px);
+      background-size: 26px 26px;
+      opacity: 0.4;
+      pointer-events: none;
+    }
+
+    .scenario-content {
+      position: relative;
+      z-index: 1;
+    }
+
+    .scenario-header {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      margin-bottom: 20px;
+      padding-bottom: 16px;
+      border-bottom: 1px solid var(--border-subtle);
+    }
+
+    .scenario-icon {
+      font-size: 32px;
+    }
+
+    .scenario-title {
+      font-size: 20px;
+      color: var(--accent);
+      font-weight: 600;
+    }
+
+    .scenario-subtitle {
+      font-size: 12px;
+      color: var(--text-muted);
+      text-transform: uppercase;
+      letter-spacing: 0.1em;
+    }
+
+    .requirements-section {
+      background: rgba(0, 0, 0, 0.3);
+      border-radius: 12px;
+      padding: 16px;
+      margin-bottom: 20px;
+    }
+
+    .requirements-title {
+      font-size: 11px;
+      text-transform: uppercase;
+      letter-spacing: 0.1em;
+      color: var(--accent);
+      margin-bottom: 12px;
+    }
+
+    .requirement-item {
+      display: flex;
+      justify-content: space-between;
+      padding: 8px 0;
+      font-size: 13px;
+      border-bottom: 1px solid rgba(255, 255, 255, 0.05);
+    }
+
+    .requirement-item:last-child {
+      border-bottom: none;
+    }
+
+    .requirement-label {
+      color: var(--text-muted);
+    }
+
+    .requirement-value {
+      color: var(--text-main);
+      font-weight: 600;
+    }
+
+    .gmg-solution {
+      background: rgba(70, 224, 195, 0.08);
+      border: 1px solid var(--accent);
+      border-radius: 12px;
+      padding: 16px;
+      margin-bottom: 20px;
+    }
+
+    .solution-title {
+      font-size: 13px;
+      color: var(--accent);
+      font-weight: 600;
+      margin-bottom: 12px;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+
+    .solution-specs {
+      display: grid;
+      gap: 8px;
+    }
+
+    .spec-item {
+      display: flex;
+      justify-content: space-between;
+      font-size: 12px;
+      padding: 6px 0;
+    }
+
+    .spec-label {
+      color: var(--text-muted);
+    }
+
+    .spec-value {
+      color: var(--text-main);
+      font-weight: 600;
+    }
+
+    .calculations-section {
+      margin-top: 24px;
+    }
+
+    .calc-title {
+      font-size: 12px;
+      text-transform: uppercase;
+      letter-spacing: 0.1em;
+      color: var(--accent);
+      margin-bottom: 16px;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+
+    .calc-card {
+      background: rgba(0, 0, 0, 0.5);
+      border: 1px solid var(--border-subtle);
+      border-radius: 12px;
+      padding: 16px;
+      margin-bottom: 12px;
+    }
+
+    .calc-header {
+      font-size: 11px;
+      color: var(--accent);
+      margin-bottom: 8px;
+      text-transform: uppercase;
+      letter-spacing: 0.08em;
+    }
+
+    .calc-formula {
+      font-family: 'Courier New', monospace;
+      font-size: 12px;
+      color: var(--text-main);
+      background: rgba(0, 0, 0, 0.6);
+      padding: 10px 12px;
+      border-radius: 8px;
+      margin-bottom: 8px;
+      overflow-x: auto;
+      line-height: 1.5;
+    }
+
+    .calc-result {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      padding: 12px;
+      background: rgba(70, 224, 195, 0.08);
+      border-radius: 8px;
+      margin-top: 8px;
+    }
+
+    .result-icon {
+      font-size: 20px;
+    }
+
+    .result-text {
+      flex: 1;
+    }
+
+    .result-label {
+      font-size: 10px;
+      color: var(--text-muted);
+      text-transform: uppercase;
+      letter-spacing: 0.08em;
+    }
+
+    .result-value {
+      font-size: 18px;
+      color: var(--accent);
+      font-weight: 600;
+    }
+
+    .status-badge {
+      padding: 6px 12px;
+      border-radius: 6px;
+      font-size: 11px;
+      font-weight: 600;
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+    }
+
+    .status-badge.success {
+      background: rgba(74, 222, 128, 0.15);
+      color: var(--success);
+    }
+
+    .status-badge.warning {
+      background: rgba(251, 191, 36, 0.15);
+      color: var(--warning);
+    }
+
+    .status-badge.error {
+      background: rgba(255, 107, 129, 0.15);
+      color: var(--danger);
+    }
+
+    .analysis-section {
+      background: rgba(0, 0, 0, 0.3);
+      border-radius: 12px;
+      padding: 16px;
+      margin-top: 20px;
+    }
+
+    .analysis-title {
+      font-size: 12px;
+      color: var(--accent);
+      font-weight: 600;
+      margin-bottom: 12px;
+    }
+
+    .analysis-text {
+      font-size: 12px;
+      line-height: 1.7;
+      color: var(--text-muted);
+    }
+
+    .cost-section {
+      background: rgba(251, 191, 36, 0.1);
+      border: 1px solid var(--warning);
+      border-radius: 12px;
+      padding: 16px;
+      margin-top: 16px;
+    }
+
+    .cost-title {
+      font-size: 12px;
+      color: var(--warning);
+      font-weight: 600;
+      margin-bottom: 8px;
+    }
+
+    .cost-value {
+      font-size: 24px;
+      color: var(--warning);
+      font-weight: 700;
+    }
+
+    @media (max-width: 1200px) {
+      .scenarios-grid {
+        grid-template-columns: 1fr;
+      }
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <div class="header">
+      <div class="header-content">
+        <h1>📋 Практичне завдання 6 - Розрахунок ГМГ</h1>
+        <p>Проектування оптимальної гвинтомоторної групи для трьох сценаріїв застосування БПЛА</p>
+        <p style="margin-top: 4px;">Розрахунки виконані за формулами з документа "Гвинтомоторна група БПЛА"</p>
+      </div>
+    </div>
+
+    <div class="scenarios-grid" id="scenariosContainer">
+      <!-- Scenarios will be inserted here by JavaScript -->
+    </div>
+  </div>
+
+  <script>
+    const scenarios = [
+      {
+        id: 'tactical',
+        icon: '🔍',
+        title: 'Сценарій 1: Тактичний розвідувальний БПЛА',
+        subtitle: 'Розвідка на малій дальності',
+        requirements: {
+          'Час польоту': 'мінімум 2 години',
+          'Радіус дії': '20-30 км',
+          'Корисне навантаження': '2 кг (камера)',
+          'Вимоги': 'низький шум, швидкий запуск',
+          'Бюджет': 'до $5,000'
+        },
+        solution: {
+          engineType: 'electric',
+          engineName: 'T-Motor U8 II KV100',
+          power: 0.8,
+          battery: 400,
+          voltage: 22.2,
+          propDiameter: 18,
+          propPitch: 6.1,
+          rpm: 4500,
+          weight: 4.5,
+          payload: 2,
+          speed: 18,
+          area: 0.25,
+          cd: 0.32,
+          cost: 4200
+        }
+      },
+      {
+        id: 'operational',
+        icon: '💥',
+        title: 'Сценарій 2: Оперативний ударний БПЛА',
+        subtitle: 'Розвідка та ураження цілей',
+        requirements: {
+          'Час польоту': 'мінімум 12 годин',
+          'Радіус дії': '100-200 км',
+          'Корисне навантаження': '50 кг (озброєння)',
+          'Вимоги': 'надійність, всепогодність',
+          'Бюджет': 'до $100,000'
+        },
+        solution: {
+          engineType: '4stroke',
+          engineName: 'Rotax 912 ULS',
+          power: 73.5,
+          fuel: 65,
+          propDiameter: 68,
+          propPitch: 42,
+          rpm: 2400,
+          weight: 145,
+          payload: 50,
+          speed: 38,
+          area: 2.8,
+          cd: 0.042,
+          cost: 85000
+        }
+      },
+      {
+        id: 'kamikaze',
+        icon: '🎯',
+        title: 'Сценарій 3: Камікадзе-дрон',
+        subtitle: 'Одноразовий ударний БПЛА',
+        requirements: {
+          'Час польоту': '3-5 годин',
+          'Дальність': 'до 1000 км',
+          'Корисне навантаження': '40 кг (боєголовка)',
+          'Вимоги': 'низька вартість, простота',
+          'Бюджет': 'до $20,000'
+        },
+        solution: {
+          engineType: '2stroke',
+          engineName: 'AP-50 3W',
+          power: 3.7,
+          fuel: 12,
+          propDiameter: 24,
+          propPitch: 12,
+          rpm: 6500,
+          weight: 38,
+          payload: 40,
+          speed: 50,
+          area: 0.65,
+          cd: 0.058,
+          cost: 18500
+        }
+      }
+    ];
+
+    function calculateGMG(solution) {
+      const isElectric = solution.engineType === 'electric';
+      
+      // Константи
+      let efficiency, propEfficiency;
+      
+      if (isElectric) {
+        efficiency = 0.8;
+      } else {
+        efficiency = 0.75;
+      }
+      
+      // Ефективність пропелера
+      if (solution.propDiameter < 12) {
+        propEfficiency = 0.70;
+      } else if (solution.propDiameter < 24) {
+        propEfficiency = 0.80;
+      } else {
+        propEfficiency = 0.88;
+      }
+      
+      const bsfc = solution.engineType === '2stroke' ? 0.4 : 0.3;
+      const rho = 1.225;
+      const g = 9.81;
+
+      // ФОРМУЛА 1: Час польоту
+      let flightTime, flightTimeFormula, flightTimeCalc;
+      
+      if (isElectric) {
+        flightTime = (solution.battery * efficiency) / (solution.power * 1000);
+        flightTimeFormula = `t = (E × η) / P`;
+        flightTimeCalc = `t = (${solution.battery} Wh × ${efficiency}) / ${(solution.power * 1000).toFixed(0)} W = ${flightTime.toFixed(2)} год`;
+      } else {
+        flightTime = (solution.fuel * propEfficiency) / (solution.power * bsfc);
+        flightTimeFormula = `t = (m_fuel × η_prop) / (P × BSFC)`;
+        flightTimeCalc = `t = (${solution.fuel} кг × ${propEfficiency}) / (${solution.power} кВт × ${bsfc}) = ${flightTime.toFixed(2)} год`;
+      }
+
+      // ФОРМУЛА 2: Необхідна тяга
+      const dragForce = 0.5 * rho * Math.pow(solution.speed, 2) * solution.area * solution.cd;
+      const thrustFormula = `T = D = ½ × ρ × V² × S × Cd`;
+      const thrustCalc = `T = 0.5 × ${rho} × ${solution.speed}² × ${solution.area} × ${solution.cd} = ${dragForce.toFixed(2)} Н`;
+
+      // ФОРМУЛА 3: Максимальна швидкість
+      const maxSpeedMph = (solution.propPitch * solution.rpm * 0.8) / 63360;
+      const maxSpeed = maxSpeedMph * 0.44704;
+      const speedFormula = `V_max ≈ (Pitch × RPM × 0.8) / 63360`;
+      const speedCalc = `V_max = (${solution.propPitch}" × ${solution.rpm} × 0.8) / 63360 = ${maxSpeedMph.toFixed(1)} mph ≈ ${maxSpeed.toFixed(1)} м/с`;
+
+      // Додаткові розрахунки
+      const totalWeight = solution.weight + solution.payload;
+      const totalWeightNewtons = totalWeight * g;
+      const thrustToWeight = dragForce / totalWeightNewtons;
+      const range = flightTime * solution.speed * 3.6;
+      const diameterToPitch = solution.propDiameter / solution.propPitch;
+
+      // Споживання
+      let consumption, consumptionUnit;
+      if (isElectric) {
+        consumption = (solution.power * 1000 * flightTime) / 1000;
+        consumptionUnit = 'кВт⋅год';
+      } else {
+        consumption = solution.power * bsfc * flightTime;
+        consumptionUnit = 'кг';
+      }
+
+      return {
+        flightTime,
+        flightTimeFormula,
+        flightTimeCalc,
+        dragForce,
+        thrustFormula,
+        thrustCalc,
+        maxSpeed,
+        speedFormula,
+        speedCalc,
+        totalWeight,
+        totalWeightNewtons,
+        thrustToWeight,
+        range,
+        diameterToPitch,
+        propEfficiency,
+        consumption,
+        consumptionUnit,
+        efficiency,
+        bsfc,
+        isElectric
+      };
+    }
+
+    function getStatusBadge(value, min, good, label) {
+      if (value >= good) {
+        return `<span class="status-badge success">✓ ${label}</span>`;
+      } else if (value >= min) {
+        return `<span class="status-badge warning">⚠ ${label}</span>`;
+      } else {
+        return `<span class="status-badge error">✗ ${label}</span>`;
+      }
+    }
+
+    function getEngineName(type) {
+      const names = {
+        'electric': 'Електричний BLDC',
+        '2stroke': 'Бензиновий 2T',
+        '4stroke': 'Бензиновий 4T'
+      };
+      return names[type] || type;
+    }
+
+    function renderScenario(scenario) {
+      const calc = calculateGMG(scenario.solution);
+      
+      const flightTimeStatus = calc.flightTime >= 2 ? 'success' : calc.flightTime >= 1 ? 'warning' : 'error';
+      const thrustStatus = calc.thrustToWeight >= 0.3 ? 'success' : calc.thrustToWeight >= 0.15 ? 'warning' : 'error';
+      const speedStatus = calc.maxSpeed >= scenario.solution.speed * 1.1 ? 'success' : calc.maxSpeed >= scenario.solution.speed * 0.9 ? 'warning' : 'error';
+
+      return `
+        <div class="scenario-card">
+          <div class="scenario-content">
+            <div class="scenario-header">
+              <div class="scenario-icon">${scenario.icon}</div>
+              <div>
+                <div class="scenario-title">${scenario.title}</div>
+                <div class="scenario-subtitle">${scenario.subtitle}</div>
+              </div>
+            </div>
+
+            <div class="requirements-section">
+              <div class="requirements-title">📋 Вимоги до БПЛА</div>
+              ${Object.entries(scenario.requirements).map(([key, value]) => `
+                <div class="requirement-item">
+                  <span class="requirement-label">${key}:</span>
+                  <span class="requirement-value">${value}</span>
+                </div>
+              `).join('')}
+            </div>
+
+            <div class="gmg-solution">
+              <div class="solution-title">⚙️ Обрана ГМГ</div>
+              <div class="solution-specs">
+                <div class="spec-item">
+                  <span class="spec-label">Двигун:</span>
+                  <span class="spec-value">${scenario.solution.engineName}</span>
+                </div>
+                <div class="spec-item">
+                  <span class="spec-label">Тип:</span>
+                  <span class="spec-value">${getEngineName(scenario.solution.engineType)}</span>
+                </div>
+                <div class="spec-item">
+                  <span class="spec-label">Потужність:</span>
+                  <span class="spec-value">${scenario.solution.power} кВт</span>
+                </div>
+                <div class="spec-item">
+                  <span class="spec-label">Пропелер:</span>
+                  <span class="spec-value">${scenario.solution.propDiameter}" × ${scenario.solution.propPitch}" @ ${scenario.solution.rpm} RPM</span>
+                </div>
+                ${calc.isElectric ? `
+                  <div class="spec-item">
+                    <span class="spec-label">Батарея:</span>
+                    <span class="spec-value">${scenario.solution.battery} Wh (${scenario.solution.voltage}V)</span>
+                  </div>
+                ` : `
+                  <div class="spec-item">
+                    <span class="spec-label">Паливо:</span>
+                    <span class="spec-value">${scenario.solution.fuel} кг</span>
+                  </div>
+                `}
+                <div class="spec-item">
+                  <span class="spec-label">Маса БПЛА:</span>
+                  <span class="spec-value">${scenario.solution.weight} кг</span>
+                </div>
+                <div class="spec-item">
+                  <span class="spec-label">Навантаження:</span>
+                  <span class="spec-value">${scenario.solution.payload} кг</span>
+                </div>
+              </div>
+            </div>
+
+            <div class="calculations-section">
+              <div class="calc-title">📐 Розрахунки за формулами</div>
+
+              <div class="calc-card">
+                <div class="calc-header">1️⃣ Час польоту</div>
+                <div class="calc-formula">${calc.flightTimeFormula}</div>
+                <div class="calc-formula">${calc.flightTimeCalc}</div>
+                <div class="calc-result">
+                  <div class="result-icon">⏱</div>
+                  <div class="result-text">
+                    <div class="result-label">Розрахований час польоту</div>
+                    <div class="result-value">${calc.flightTime.toFixed(2)} годин</div>
+                  </div>
+                  ${getStatusBadge(calc.flightTime, 1, 2, 
+                    calc.flightTime >= 2 ? 'Відмінно' : calc.flightTime >= 1 ? 'Прийнятно' : 'Недостатньо')}
+                </div>
+              </div>
+
+              <div class="calc-card">
+                <div class="calc-header">2️⃣ Необхідна тяга для горизонтального польоту</div>
+                <div class="calc-formula">${calc.thrustFormula}</div>
+                <div class="calc-formula">${calc.thrustCalc}</div>
+                <div class="calc-result">
+                  <div class="result-icon">⚡</div>
+                  <div class="result-text">
+                    <div class="result-label">Сила опору / Необхідна тяга</div>
+                    <div class="result-value">${calc.dragForce.toFixed(2)} Н</div>
+                  </div>
+                  <div>
+                    <div class="result-label">T/W ratio</div>
+                    <div class="result-value" style="font-size: 14px;">${calc.thrustToWeight.toFixed(3)}</div>
+                  </div>
+                </div>
+                <div style="margin-top: 8px; font-size: 11px; color: var(--text-muted);">
+                  Загальна вага: ${calc.totalWeight} кг = ${calc.totalWeightNewtons.toFixed(1)} Н
+                  ${getStatusBadge(calc.thrustToWeight, 0.15, 0.3, 
+                    calc.thrustToWeight >= 0.3 ? 'T/W оптимально' : calc.thrustToWeight >= 0.15 ? 'T/W прийнятно' : 'T/W недостатньо')}
+                </div>
+              </div>
+
+              <div class="calc-card">
+                <div class="calc-header">3️⃣ Теоретична максимальна швидкість</div>
+                <div class="calc-formula">${calc.speedFormula}</div>
+                <div class="calc-formula">${calc.speedCalc}</div>
+                <div class="calc-result">
+                  <div class="result-icon">🚀</div>
+                  <div class="result-text">
+                    <div class="result-label">Максимальна швидкість</div>
+                    <div class="result-value">${calc.maxSpeed.toFixed(1)} м/с (${(calc.maxSpeed * 3.6).toFixed(0)} км/год)</div>
+                  </div>
+                  ${getStatusBadge(calc.maxSpeed, scenario.solution.speed * 0.9, scenario.solution.speed * 1.1, 
+                    calc.maxSpeed >= scenario.solution.speed * 1.1 ? 'Достатньо' : 
+                    calc.maxSpeed >= scenario.solution.speed * 0.9 ? 'Граничне' : 'Недостатньо')}
+                </div>
+                <div style="margin-top: 8px; font-size: 11px; color: var(--text-muted);">
+                  Крейсерська швидкість: ${scenario.solution.speed} м/с (${(scenario.solution.speed * 3.6).toFixed(0)} км/год)
+                </div>
+              </div>
+
+              <div class="calc-card">
+                <div class="calc-header">📊 Підсумкові характеристики</div>
+                <div class="calc-formula">Дальність = ${calc.range.toFixed(0)} км (${calc.flightTime.toFixed(1)} год × ${scenario.solution.speed} м/с × 3.6)</div>
+                <div class="calc-formula">Споживання = ${calc.consumption.toFixed(1)} ${calc.consumptionUnit} за політ</div>
+                <div class="calc-formula">Співвідношення D/P = ${calc.diameterToPitch.toFixed(2)} (${
+                  calc.diameterToPitch > 3 ? 'висока тяга, низька швидкість' :
+                  calc.diameterToPitch < 2 ? 'висока швидкість, низька тяга' :
+                  'збалансоване'
+                })</div>
+                <div class="calc-formula">Ефективність пропелера = ${(calc.propEfficiency * 100).toFixed(0)}%</div>
+              </div>
+            </div>
+
+            <div class="analysis-section">
+              <div class="analysis-title">💡 Обґрунтування вибору ГМГ</div>
+              <div class="analysis-text">
+                ${generateAnalysis(scenario, calc)}
+              </div>
+            </div>
+
+            <div class="cost-section">
+              <div class="cost-title">💰 Вартість ГМГ</div>
+              <div class="cost-value">$${scenario.solution.cost.toLocaleString()}</div>
+              <div style="font-size: 11px; margin-top: 4px; color: var(--text-muted);">
+                ${scenario.solution.cost <= parseFloat(scenario.requirements['Бюджет'].replace(/[^\d]/g, '')) 
+                  ? '✓ В межах бюджету' 
+                  : '✗ Перевищує бюджет'}
+              </div>
+            </div>
+          </div>
+        </div>
+      `;
+    }
+
+    function generateAnalysis(scenario, calc) {
+      const analyses = {
+        tactical: `
+          <strong>Вибір електричної ГМГ:</strong> Для тактичної розвідки критично важливий низький рівень шуму та швидкий запуск без прогріву. 
+          T-Motor U8 II з BLDC технологією забезпечує ці вимоги. Ефективність системи ${(calc.efficiency * 100).toFixed(0)}% дозволяє досягти 
+          ${calc.flightTime.toFixed(1)} годин польоту з батареєю ${scenario.solution.battery} Wh.<br/><br/>
+          
+          <strong>Пропелер ${scenario.solution.propDiameter}" × ${scenario.solution.propPitch}":</strong> Середній діаметр забезпечує баланс між 
+          ефективністю (${(calc.propEfficiency * 100).toFixed(0)}%) та компактністю. Низький крок оптимізований для крейсерської швидкості 
+          ${scenario.solution.speed} м/с, що ідеально для розвідувальних місій.<br/><br/>
+          
+          <strong>Компроміси:</strong> Час польоту ${calc.flightTime.toFixed(1)} год задовольняє вимогу мінімум 2 години. 
+          Дальність ${calc.range.toFixed(0)} км достатня для радіусу дії 20-30 км. Вартість $${scenario.solution.cost.toLocaleString()} 
+          в межах бюджету $5,000.
+        `,
+        operational: `
+          <strong>Вибір Rotax 912 ULS:</strong> Легендарний 4-тактний авіаційний двигун обраний через надійність (наліт між ремонтами до 2000 годин) 
+          та паливну ефективність. BSFC ${calc.bsfc} кг/кВт/год дозволяє досягти ${calc.flightTime.toFixed(1)} годин польоту з ${scenario.solution.fuel} кг палива.<br/><br/>
+          
+          <strong>Пропелер ${scenario.solution.propDiameter}" (${(scenario.solution.propDiameter * 2.54 / 100).toFixed(2)} м):</strong> 
+          Великий діаметр забезпечує високу тягову ефективність ${(calc.propEfficiency * 100).toFixed(0)}% при крейсерській швидкості 
+          ${scenario.solution.speed} м/с. Співвідношення D/P = ${calc.diameterToPitch.toFixed(2)} оптимізоване для тривалих місій.<br/><br/>
+          
+          <strong>Всепогодність:</strong> 4-тактний цикл забезпечує стабільну роботу в різних умовах. Потужність ${scenario.solution.power} кВт 
+          достатня для несення ${scenario.solution.payload} кг озброєння. Дальність ${calc.range.toFixed(0)} км перевищує вимогу 100-200 км. 
+          T/W = ${calc.thrustToWeight.toFixed(3)} забезпечує стабільний політ.
+        `,
+        kamikaze: `
+          <strong>Вибір 2-тактного двигуна:</strong> AP-50 3W обраний через низьку вартість, простоту конструкції та високу питому потужність. 
+          Для одноразової місії надійність менш критична, тому вищий BSFC ${calc.bsfc} кг/кВт/год прийнятний.<br/><br/>
+          
+          <strong>Оптимізація для дальності:</strong> З ${scenario.solution.fuel} кг палива досягається ${calc.flightTime.toFixed(1)} годин польоту 
+          та дальність ${calc.range.toFixed(0)} км, що задовольняє вимогу до 1000 км. Крейсерська швидкість ${scenario.solution.speed} м/с 
+          (${(scenario.solution.speed * 3.6).toFixed(0)} км/год) забезпечує швидке досягнення цілі.<br/><br/>
+          
+          <strong>Низька вартість:</strong> Загальна вартість $${scenario.solution.cost.toLocaleString()} в межах бюджету $20,000 дозволяє 
+          масове виробництво. Пропелер ${scenario.solution.propDiameter}" × ${scenario.solution.propPitch}" забезпечує баланс між тягою 
+          (T/W = ${calc.thrustToWeight.toFixed(3)}) та швидкістю для ефективного ураження цілей з боєголовкою ${scenario.solution.payload} кг.
+        `
+      };
+
+      return analyses[scenario.id] || 'Аналіз не доступний';
+    }
+
+    // Render all scenarios
+    document.getElementById('scenariosContainer').innerHTML = scenarios.map(renderScenario).join('');
+  </script>
+</body>
+</html>
